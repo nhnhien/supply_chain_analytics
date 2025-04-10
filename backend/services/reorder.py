@@ -20,8 +20,8 @@ def calculate_reorder_strategy():
     lead_time_df = df.groupby("product_category_name")["shipping_duration"].mean().reset_index()
     lead_time_df.columns = ["product_category_name", "avg_lead_time"]
 
-    # Service level: 95% → Z = 1.65
-    z_score = 1.65
+    z_score = 1.65  # 95% service level
+    holding_cost_per_unit_per_month = 2  # giả định chi phí lưu kho 2đ/sản phẩm/tháng
 
     strategy = []
 
@@ -29,17 +29,17 @@ def calculate_reorder_strategy():
         category = row["product_category_name"]
         lead_time = row["avg_lead_time"]
 
-        # Tính std số đơn hàng theo tháng cho từng category
         cat_df = df[df["product_category_name"] == category]
         monthly_orders = cat_df.groupby("order_month").size()
         demand_std = monthly_orders.std() if len(monthly_orders) >= 2 else 0
 
-        # Safety stock và reorder point
         safety_stock = int(z_score * demand_std * np.sqrt(lead_time)) if lead_time > 0 else 0
         reorder_point = int(avg_demand_per_month * lead_time + safety_stock)
-
-        # ✅ Thêm optimal inventory
         optimal_inventory = reorder_point + safety_stock
+
+        # ✅ Tính holding cost
+        lead_time_months = round(lead_time / 30, 2)
+        holding_cost = int(optimal_inventory * holding_cost_per_unit_per_month * lead_time_months)
 
         strategy.append({
             "category": category,
@@ -48,7 +48,8 @@ def calculate_reorder_strategy():
             "demand_std": int(demand_std),
             "safety_stock": safety_stock,
             "reorder_point": reorder_point,
-            "optimal_inventory": optimal_inventory
+            "optimal_inventory": optimal_inventory,
+            "holding_cost": holding_cost
         })
 
     return strategy

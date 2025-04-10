@@ -62,5 +62,22 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig("charts/reorder_optimal_inventory_top10.png")
 
+
+# ===================== 
+# 🔹 Biểu đồ 5: Holding Cost cao nhất
+# Giả sử Unit Holding Cost là 10
+unit_holding_cost = 10  # Điều chỉnh theo giá trị thực tế
+df["holding_cost"] = df["optimal_inventory"] * unit_holding_cost
+
+top10_holding_cost = df.sort_values("holding_cost", ascending=False).head(10)
+plt.figure(figsize=(12, 6))
+plt.barh(top10_holding_cost["category"], top10_holding_cost["holding_cost"], color="red")
+plt.xlabel("Holding Cost")
+plt.title("Top 10 danh mục có Holding Cost cao nhất")
+plt.gca().invert_yaxis()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig("charts/reorder_holding_cost_top10.png")
+
 # ✅ Nếu cần hiển thị trực tiếp:
 plt.show()
