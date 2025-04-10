@@ -4,7 +4,10 @@ from services.preprocess import preprocess_data
 from services.forecast import forecast_demand
 
 def calculate_reorder_strategy():
-    import numpy as np  # đảm bảo numpy được import
+    import numpy as np
+    from services.preprocess import preprocess_data
+    from services.forecast import forecast_demand
+
     df = preprocess_data()
     forecast = forecast_demand(periods=6)["forecast_table"]
 
@@ -31,9 +34,12 @@ def calculate_reorder_strategy():
         monthly_orders = cat_df.groupby("order_month").size()
         demand_std = monthly_orders.std() if len(monthly_orders) >= 2 else 0
 
-        # Safety stock = Z * std * sqrt(LT)
+        # Safety stock và reorder point
         safety_stock = int(z_score * demand_std * np.sqrt(lead_time)) if lead_time > 0 else 0
         reorder_point = int(avg_demand_per_month * lead_time + safety_stock)
+
+        # ✅ Thêm optimal inventory
+        optimal_inventory = reorder_point + safety_stock
 
         strategy.append({
             "category": category,
@@ -41,7 +47,8 @@ def calculate_reorder_strategy():
             "forecast_avg_demand": int(avg_demand_per_month),
             "demand_std": int(demand_std),
             "safety_stock": safety_stock,
-            "reorder_point": reorder_point
+            "reorder_point": reorder_point,
+            "optimal_inventory": optimal_inventory
         })
 
     return strategy

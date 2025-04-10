@@ -50,5 +50,17 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig("charts/reorder_lead_time_top10.png")
 
-# ✅ Nếu cần hiển thị trực tiếp (không bắt buộc):
+# =====================
+# 🔹 Biểu đồ 4: Optimal Inventory cao nhất
+top10_opt = df.sort_values("optimal_inventory", ascending=False).head(10)
+plt.figure(figsize=(12, 6))
+plt.barh(top10_opt["category"], top10_opt["optimal_inventory"], color="purple")
+plt.xlabel("Optimal Inventory")
+plt.title("Top 10 danh mục có Optimal Inventory cao nhất")
+plt.gca().invert_yaxis()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig("charts/reorder_optimal_inventory_top10.png")
+
+# ✅ Nếu cần hiển thị trực tiếp:
 plt.show()
