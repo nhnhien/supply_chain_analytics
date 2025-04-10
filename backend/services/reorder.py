@@ -53,3 +53,40 @@ def calculate_reorder_strategy():
         })
 
     return strategy
+
+
+
+def generate_optimization_recommendations(strategy_df): 
+    # 1. Tính chi phí lưu kho hiện tại
+    strategy_df["holding_cost_optimized"] = strategy_df["optimal_inventory"] * 10  # 10đ/đơn vị
+
+    # 2. Lọc các danh mục có chi phí cao
+    high_holding_cost = strategy_df.sort_values("holding_cost_optimized", ascending=False).head(10)
+    recommendations = []
+
+    for _, row in high_holding_cost.iterrows():
+        category = row["category"]
+        holding_cost = row["holding_cost_optimized"]
+        safety_stock = row["safety_stock"]
+        reorder_point = row["reorder_point"]
+
+        # Đề xuất nếu chi phí quá cao
+        if holding_cost > 1_000_000:
+            new_safety_stock = int(safety_stock * 0.8)
+            new_reorder_point = int(reorder_point * 0.9)
+            new_optimal_inventory = new_reorder_point + new_safety_stock
+            new_holding_cost = new_optimal_inventory * 10
+            potential_saving = holding_cost - new_holding_cost
+
+            recommendations.append({
+                "category": category,
+                "recommendation": f"Giảm Safety Stock từ {safety_stock} xuống {new_safety_stock} để tiết kiệm chi phí.",
+                "new_safety_stock": new_safety_stock,
+                "new_reorder_point": new_reorder_point,
+                "potential_saving": int(potential_saving)  # ✅ Rất quan trọng cho biểu đồ
+            })
+
+    recommendations_df = pd.DataFrame(recommendations)
+    recommendations_df.to_excel("charts/optimization_recommendations.xlsx", index=False)
+
+    return recommendations_df

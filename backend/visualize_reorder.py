@@ -1,7 +1,8 @@
 # visualize_reorder.py
+
 import pandas as pd
 import matplotlib.pyplot as plt
-from services.reorder import calculate_reorder_strategy
+from services.reorder import calculate_reorder_strategy, generate_optimization_recommendations
 import os
 
 # Tính toán chiến lược
@@ -62,7 +63,6 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig("charts/reorder_optimal_inventory_top10.png")
 
-
 # ===================== 
 # 🔹 Biểu đồ 5: Holding Cost cao nhất
 # Giả sử Unit Holding Cost là 10
@@ -78,6 +78,34 @@ plt.gca().invert_yaxis()
 plt.grid(True)
 plt.tight_layout()
 plt.savefig("charts/reorder_holding_cost_top10.png")
+
+# =====================
+# ✅ Tính toán các đề xuất tối ưu hóa
+recommendations_df = generate_optimization_recommendations(df)
+recommendations_df.to_excel("charts/optimization_recommendations.xlsx", index=False)
+
+
+
+# =====================
+# 🔹 Biểu đồ 6: Gợi ý tối ưu hóa - Potential Saving cao nhất
+top10_saving = recommendations_df.sort_values("potential_saving", ascending=False).head(10)
+
+plt.figure(figsize=(12, 6))
+bars = plt.barh(top10_saving["category"], top10_saving["potential_saving"], color="crimson")
+plt.xlabel("Potential Saving (₫)")
+plt.title("Top 10 danh mục có tiềm năng tiết kiệm chi phí cao nhất")
+plt.gca().invert_yaxis()
+plt.grid(True)
+
+# Hiển thị nhãn giá trị
+for bar in bars:
+    width = bar.get_width()
+    plt.text(width + 5000, bar.get_y() + bar.get_height() / 2,
+             f"{int(width):,} ₫", va='center')
+
+plt.tight_layout()
+plt.savefig("charts/reorder_potential_saving_top10.png")
+
 
 # ✅ Nếu cần hiển thị trực tiếp:
 plt.show()
