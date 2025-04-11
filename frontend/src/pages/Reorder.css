@@ -67,6 +67,137 @@
     gap: 20px;
   }
   
+  .error-with-retry {
+    text-align: center;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+  }
+  
+  .retry-button {
+    background-color: #2196f3;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background-color 0.2s;
+  }
+  
+  .retry-button:hover {
+    background-color: #1976d2;
+  }
+  
+  .retry-note {
+    margin-top: 15px;
+    color: #666;
+    font-size: 14px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .no-data-message {
+    text-align: center;
+    padding: 30px;
+  }
+  
+  .no-data-message p {
+    color: #666;
+    margin-bottom: 15px;
+  }
+  
+  /* Recommendations styles */
+  .recommendations-container {
+    margin-bottom: 20px;
+  }
+  
+  .recommendations-intro {
+    display: flex;
+    align-items: flex-start;
+    background-color: #e3f2fd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-left: 4px solid #2196f3;
+  }
+  
+  .recommendations-intro svg {
+    color: #2196f3;
+    margin-right: 10px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  
+  .recommendations-intro p {
+    margin: 0;
+    color: #333;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  .recommendation-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .recommendation-category {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .recommendation-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .recommendation-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px dashed #eee;
+    color: #555;
+    font-size: 14px;
+  }
+  
+  .recommendation-item:last-child {
+    border-bottom: none;
+  }
+  
+  .recommendation-item svg {
+    margin-right: 10px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  
+  .recommendation-item.warning {
+    color: #ff9800;
+  }
+  
+  .recommendation-item.warning svg {
+    color: #ff9800;
+  }
+  
+  .recommendation-item.positive {
+    color: #4caf50;
+  }
+  
+  .recommendation-item.positive svg {
+    color: #4caf50;
+  }
+  
   @media (max-width: 768px) {
     .charts-container {
       grid-template-columns: 1fr;

@@ -1,8 +1,9 @@
 .spinner-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 200px;
+    height: 300px;
   }
   
   .spinner {
@@ -12,6 +13,14 @@
     border-radius: 50%;
     border-top-color: #2196f3;
     animation: spin 1s ease-in-out infinite;
+    margin-bottom: 15px;
+  }
+  
+  .spinner-message {
+    color: #666;
+    text-align: center;
+    max-width: 80%;
+    line-height: 1.5;
   }
   
   @keyframes spin {

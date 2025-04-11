@@ -14,9 +14,10 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts"
-import { getAnalysisSummary, getMonthlyOrdersChart, getDeliveryDelayChart } from "../services/api"
+import { getAnalysisSummary, getMonthlyOrdersChart, getDeliveryDelayChart, getUploadedFiles } from "../services/api"
 import LoadingSpinner from "../components/LoadingSpinner"
 import ErrorMessage from "../components/ErrorMessage"
+import { useNavigate } from "react-router-dom"
 import "./Dashboard.css"
 
 const Dashboard = () => {
@@ -25,13 +26,25 @@ const Dashboard = () => {
   const [deliveryDelay, setDeliveryDelay] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [retryCount, setRetryCount] = useState(0)
+  const navigate = useNavigate()
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"]
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        // Kiểm tra xem đã có file được upload chưa
+        const uploadedFiles = getUploadedFiles()
+        if (uploadedFiles.length === 0) {
+          // Nếu chưa có file nào được upload, chuyển hướng đến trang upload
+          navigate("/upload")
+          return
+        }
+
         setLoading(true)
+        setError(null)
+
         const [summaryRes, monthlyOrdersRes, deliveryDelayRes] = await Promise.all([
           getAnalysisSummary(),
           getMonthlyOrdersChart(),
@@ -46,14 +59,41 @@ const Dashboard = () => {
         console.error("Error fetching dashboard data:", err)
         setError("Không thể tải dữ liệu dashboard. Vui lòng thử lại sau.")
         setLoading(false)
+
+        // Nếu lỗi và chưa retry quá nhiều lần, thử lại sau 5 giây
+        if (retryCount < 3) {
+          setTimeout(() => {
+            setRetryCount((prev) => prev + 1)
+          }, 5000)
+        }
       }
     }
 
     fetchDashboardData()
-  }, [])
+  }, [navigate, retryCount])
 
-  if (loading) return <LoadingSpinner />
-  if (error) return <ErrorMessage message={error} />
+  // Hàm retry thủ công
+  const handleRetry = () => {
+    setRetryCount((prev) => prev + 1)
+  }
+
+  if (loading)
+    return (
+      <LoadingSpinner message="Đang tải dữ liệu dashboard. Quá trình này có thể mất vài phút nếu dữ liệu vừa được tải lên." />
+    )
+
+  if (error)
+    return (
+      <div className="error-with-retry">
+        <ErrorMessage message={error} />
+        <button className="retry-button" onClick={handleRetry}>
+          Thử lại
+        </button>
+        <p className="retry-note">
+          Lưu ý: Sau khi tải lên dữ liệu mới, hệ thống cần thời gian để xử lý và tính toán các phân tích.
+        </p>
+      </div>
+    )
 
   // Tính toán các chỉ số tổng quan
   const totalOrders = monthlyOrders.reduce((sum, item) => sum + item.value, 0)
