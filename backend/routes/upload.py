@@ -1,10 +1,10 @@
 import os
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
+from utils.cache import _cache_store  # ✅ Import cache store để clear
 
 upload_bp = Blueprint("upload", __name__, url_prefix="/upload")
 
-# Đường dẫn chuẩn bất kể bạn chạy từ đâu
 UPLOAD_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))
 ALLOWED_EXTENSIONS = {"csv"}
 
@@ -25,6 +25,12 @@ def upload_file():
         filename = secure_filename(file.filename)
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
         file.save(os.path.join(UPLOAD_FOLDER, filename))
+
+        # ✅ Xóa cache sau khi upload thành công
+        for key in list(_cache_store.keys()):
+            if key.startswith("chart_") or key.startswith("eda_") or key.startswith("forecast_") or key.startswith("reorder_"):
+                del _cache_store[key]
+
         return jsonify({"message": "File uploaded successfully", "filename": filename}), 200
-    else:
-        return jsonify({"error": "Invalid file type"}), 400
+
+    return jsonify({"error": "Invalid file type"}), 400

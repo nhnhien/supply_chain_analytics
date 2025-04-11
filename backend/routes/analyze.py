@@ -7,6 +7,7 @@ from services.eda import (
     generate_shipping_duration_by_seller_chart,
     generate_shipping_cost_by_category_chart
 )
+
 analyze_bp = Blueprint("analyze", __name__, url_prefix="/analyze")
 
 @analyze_bp.route("/summary", methods=["GET"])
@@ -16,21 +17,20 @@ def get_eda_summary():
 
 @analyze_bp.route("/chart/monthly-orders", methods=["GET"])
 def get_monthly_orders_chart():
-    base64_img = generate_monthly_orders_chart()
-    return jsonify({"chart": base64_img})
+    return jsonify(generate_monthly_orders_chart())  # ✅ Trả cả chart + data
 
 @analyze_bp.route("/chart/top-categories", methods=["GET"])
 def get_top_categories_chart():
-    return jsonify({"chart": generate_top_categories_chart()})
+    return jsonify(generate_top_categories_chart())  # ✅ Trả cả chart + data
 
 @analyze_bp.route("/chart/delivery-delay", methods=["GET"])
 def get_delivery_delay_chart():
-    return jsonify({"chart": generate_delivery_delay_pie()})
+    return jsonify(generate_delivery_delay_pie())  # ✅ Trả cả chart + data
 
 @analyze_bp.route("/chart/seller-shipping", methods=["GET"])
 def get_shipping_duration_by_seller_chart():
-    return jsonify({"chart": generate_shipping_duration_by_seller_chart()})
+    return jsonify(generate_shipping_duration_by_seller_chart())  # ✅ Trả cả chart + data
 
 @analyze_bp.route("/chart/shipping-cost-category", methods=["GET"])
 def get_shipping_cost_by_category_chart():
-    return jsonify({"chart": generate_shipping_cost_by_category_chart()})
+    return jsonify(generate_shipping_cost_by_category_chart())  # ✅ Trả cả chart + data
