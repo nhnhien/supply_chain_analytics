@@ -1,68 +1,28 @@
-// src/pages/Forecast.jsx
-import React, { useEffect } from 'react';
-import Layout from '../components/common/Layout';
-import ForecastResults from '../components/forecast/ForecastResults';
-import { useApp } from '../context/AppContext';
-import { getDemandForecast } from '../api';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getDemandForecast } from '@/api';
+import { Card, Spin } from 'antd';
+import ForecastChart from '@/components/charts/ForecastChart';
 
 const Forecast = () => {
-  const { loading, setLoading, handleError, fileUploaded, forecastData, setForecastData } = useApp();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['demandForecast'],
+    queryFn: getDemandForecast,
+  });
 
-  useEffect(() => {
-    const fetchForecastData = async () => {
-      if (!fileUploaded) return;
-      
-      setLoading(true);
-      try {
-        const response = await getDemandForecast();
-        setForecastData(response.data);
-      } catch (error) {
-        handleError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (isLoading) return <Spin tip="Đang tải dự báo nhu cầu..." size="large" />;
+  if (isError) return <p className="text-red-500">❌ Không thể tải dữ liệu dự báo.</p>;
 
-    fetchForecastData();
-  }, [fileUploaded]);
+  const chartData = data?.chart_data || [];
+  const forecastTable = data?.forecast_table || [];
 
   return (
-    <Layout>
-      <h1 className="text-2xl font-bold mb-6">Dự báo nhu cầu</h1>
-      
-      {!fileUploaded ? (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">
-                Vui lòng tải lên dữ liệu trước khi sử dụng dự báo.
-                <a href="/upload" className="font-medium underline text-yellow-700 hover:text-yellow-600 ml-1">
-                  Tải lên ngay
-                </a>
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : loading ? (
-        <div className="flex justify-center items-center h-64">
-          <p className="text-gray-500">Đang tính toán dự báo...</p>
-        </div>
-      ) : (
-        <>
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-blue-700">
-                  Dự báo được tính toán dựa trên phương pháp ARIMA và dữ liệu đơn hàng theo thời gian. Dự báo có thể thay đổi khi có thêm dữ liệu mới.
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <ForecastResults forecastData={forecastData} />
-        </>
-      )}
-    </Layout>
+    <div className="p-6">
+      <Card>
+        <h2 className="text-xl font-semibold mb-4">Biểu đồ dự báo nhu cầu</h2>
+        <ForecastChart data={chartData} table={forecastTable} />
+      </Card>
+    </div>
   );
 };
 

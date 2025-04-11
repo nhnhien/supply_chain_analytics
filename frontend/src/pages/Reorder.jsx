@@ -1,68 +1,69 @@
-// src/pages/Reorder.jsx
-import React, { useEffect } from 'react';
-import Layout from '../components/common/Layout';
-import ReorderStrategy from '../components/reorder/ReorderStrategy';
-import { useApp } from '../context/AppContext';
-import { getReorderStrategy } from '../api';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  getReorderStrategy,
+  getTopReorderPoints,
+  getTopSafetyStock,
+  getTopLeadTime,
+  getTopOptimalInventory,
+  getTopHoldingCost,
+} from '@/api';
+import { Card, Spin } from 'antd';
+import ReorderCharts from '@/components/charts/ReorderCharts';
 
 const Reorder = () => {
-  const { loading, setLoading, handleError, fileUploaded, reorderData, setReorderData } = useApp();
+  const { data: strategy, isLoading: loadingStrategy, isError } = useQuery({
+    queryKey: ['reorderStrategy'],
+    queryFn: getReorderStrategy,
+  });
 
-  useEffect(() => {
-    const fetchReorderData = async () => {
-      if (!fileUploaded) return;
-      
-      setLoading(true);
-      try {
-        const response = await getReorderStrategy();
-        setReorderData(response.data);
-      } catch (error) {
-        handleError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: reorderPoints } = useQuery({
+    queryKey: ['reorderPoints'],
+    queryFn: getTopReorderPoints,
+    enabled: !!strategy,
+  });
 
-    fetchReorderData();
-  }, [fileUploaded]);
+  const { data: safetyStock } = useQuery({
+    queryKey: ['safetyStock'],
+    queryFn: getTopSafetyStock,
+    enabled: !!strategy,
+  });
+
+  const { data: leadTime } = useQuery({
+    queryKey: ['leadTime'],
+    queryFn: getTopLeadTime,
+    enabled: !!strategy,
+  });
+
+  const { data: inventory } = useQuery({
+    queryKey: ['optimalInventory'],
+    queryFn: getTopOptimalInventory,
+    enabled: !!strategy,
+  });
+
+  const { data: holdingCost } = useQuery({
+    queryKey: ['holdingCost'],
+    queryFn: getTopHoldingCost,
+    enabled: !!strategy,
+  });
+
+  if (loadingStrategy) return <Spin tip="Đang tải chiến lược đặt hàng..." size="large" />;
+  if (isError) return <p>❌ Không thể tải dữ liệu chiến lược.</p>;
 
   return (
-    <Layout>
-      <h1 className="text-2xl font-bold mb-6">Kế hoạch đặt hàng</h1>
-      
-      {!fileUploaded ? (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">
-                Vui lòng tải lên dữ liệu trước khi sử dụng kế hoạch đặt hàng.
-                <a href="/upload" className="font-medium underline text-yellow-700 hover:text-yellow-600 ml-1">
-                  Tải lên ngay
-                </a>
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : loading ? (
-        <div className="flex justify-center items-center h-64">
-          <p className="text-gray-500">Đang tính toán kế hoạch đặt hàng...</p>
-        </div>
-      ) : (
-        <>
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-blue-700">
-                  Kế hoạch đặt hàng được tính toán dựa trên mô hình EOQ (Economic Order Quantity) và phân tích lead time theo danh mục sản phẩm.
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <ReorderStrategy reorderData={reorderData} />
-        </>
-      )}
-    </Layout>
+    <div className="p-6">
+      <Card className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">Chiến lược đặt hàng</h2>
+        <pre>{JSON.stringify(strategy, null, 2)}</pre>
+      </Card>
+      <ReorderCharts
+        reorderPoints={reorderPoints}
+        safetyStock={safetyStock}
+        leadTime={leadTime}
+        inventory={inventory}
+        holdingCost={holdingCost}
+      />
+    </div>
   );
 };
 

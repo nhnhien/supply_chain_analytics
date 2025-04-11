@@ -2,11 +2,14 @@
 import React, { useState } from 'react';
 import { uploadFile } from '../../api';
 import { useApp } from '../../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 
 const FileUpload = () => {
   const { setLoading, handleError, setFileUploaded } = useApp();
   const [files, setFiles] = useState([]);
   const [uploadStatus, setUploadStatus] = useState([]);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const handleFileChange = (e) => {
     setFiles(Array.from(e.target.files));
@@ -19,6 +22,7 @@ const FileUpload = () => {
 
     setLoading(true);
     setUploadStatus([]);
+    setShowSuccess(false);
     
     try {
       const uploadPromises = files.map(async (file) => {
@@ -38,12 +42,17 @@ const FileUpload = () => {
       const allSuccess = results.every(result => result.success);
       if (allSuccess) {
         setFileUploaded(true);
+        setShowSuccess(true);
       }
     } catch (error) {
       handleError(error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoToDashboard = () => {
+    navigate('/');
   };
 
   const requiredFiles = [
@@ -64,6 +73,7 @@ const FileUpload = () => {
             <li key={file}>{file}</li>
           ))}
         </ul>
+        <p className="text-xs text-gray-500 italic">Lưu ý: Tải lên tất cả các file để hệ thống hoạt động đúng</p>
       </div>
       
       <div className="mb-6">
@@ -92,6 +102,24 @@ const FileUpload = () => {
         </button>
       </div>
 
+      {showSuccess && (
+        <div className="mt-6 bg-green-50 border-l-4 border-green-400 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-green-700">
+                Tải lên thành công! Bây giờ bạn có thể xem các phân tích dữ liệu.
+              </p>
+              <button
+                onClick={handleGoToDashboard}
+                className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+              >
+                Xem Bảng điều khiển
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {uploadStatus.length > 0 && (
         <div className="mt-6 border rounded-md overflow-hidden">
           <div className="bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700">
@@ -112,6 +140,9 @@ const FileUpload = () => {
                   }`}
                 >
                   {status.success ? 'Thành công' : 'Thất bại'}
+                  {!status.success && status.error && (
+                    <span className="block text-xs">{status.error}</span>
+                  )}
                 </span>
               </div>
             ))}
@@ -123,4 +154,3 @@ const FileUpload = () => {
 };
 
 export default FileUpload;
-
