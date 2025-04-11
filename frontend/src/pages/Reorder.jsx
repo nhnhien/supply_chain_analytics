@@ -7,9 +7,11 @@ import {
   getTopLeadTime,
   getTopOptimalInventory,
   getTopHoldingCost,
-} from '@/api';
+} from '../api';
 import { Card, Spin } from 'antd';
-import ReorderCharts from '@/components/charts/ReorderCharts';
+import Layout from '../components/common/Layout';
+import ReorderCharts from '../components/charts/ReorderCharts';
+import ReorderStrategy from '../components/reorder/ReorderStrategy';
 
 const Reorder = () => {
   const { data: strategy, isLoading: loadingStrategy, isError } = useQuery({
@@ -47,23 +49,38 @@ const Reorder = () => {
     enabled: !!strategy,
   });
 
-  if (loadingStrategy) return <Spin tip="Đang tải chiến lược đặt hàng..." size="large" />;
-  if (isError) return <p>❌ Không thể tải dữ liệu chiến lược.</p>;
+  if (loadingStrategy) {
+    return (
+      <Layout>
+        <Spin tip="Đang tải chiến lược đặt hàng..." size="large" />
+      </Layout>
+    );
+  }
+  
+  if (isError) {
+    return (
+      <Layout>
+        <p className="text-red-500">❌ Không thể tải dữ liệu chiến lược.</p>
+      </Layout>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <Card className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Chiến lược đặt hàng</h2>
-        <pre>{JSON.stringify(strategy, null, 2)}</pre>
-      </Card>
-      <ReorderCharts
-        reorderPoints={reorderPoints}
-        safetyStock={safetyStock}
-        leadTime={leadTime}
-        inventory={inventory}
-        holdingCost={holdingCost}
-      />
-    </div>
+    <Layout>
+      <div className="p-6">
+        <ReorderStrategy reorderData={strategy?.data} />
+        
+        <div className="mt-8">
+          <ReorderCharts
+            reorderPoints={reorderPoints?.data?.data}
+            safetyStock={safetyStock?.data?.data}
+            leadTime={leadTime?.data?.data}
+            optimalInventory={inventory?.data?.data}
+            holdingCost={holdingCost?.data?.data}
+          />
+        </div>
+      </div>
+    </Layout>
   );
 };
 

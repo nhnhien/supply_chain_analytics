@@ -26,10 +26,17 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
 };
 
 const DeliveryDelayChart = ({ data }) => {
-  console.log('DeliveryDelayChart data:', data); // ✅ DEBUG
+  console.log('DeliveryDelayChart data:', data); // Debug dữ liệu
 
-  if (!Array.isArray(data) || data.length === 0) {
-    return <p>Không có dữ liệu để hiển thị biểu đồ giao trễ.</p>;
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="chart-container">
+        <h3 className="chart-title">Tỷ lệ đơn hàng giao trễ</h3>
+        <div className="h-64 flex items-center justify-center">
+          <p className="text-gray-500">Không có dữ liệu để hiển thị</p>
+        </div>
+      </div>
+    );
   }
 
   const total = data.reduce((sum, item) => sum + item.count, 0);

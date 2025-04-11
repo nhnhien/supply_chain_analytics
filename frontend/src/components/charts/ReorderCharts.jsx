@@ -5,7 +5,18 @@ import {
 } from 'recharts';
 
 const Chart = ({ title, data, color, yAxisWidth = 100 }) => {
-  if (!data || data.length === 0) return null;
+  console.log(`${title} data:`, data); // Debug dữ liệu
+
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="chart-container">
+        <h3 className="chart-title">{title}</h3>
+        <div className="h-64 flex items-center justify-center">
+          <p className="text-gray-500">Không có dữ liệu để hiển thị</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chart-container">

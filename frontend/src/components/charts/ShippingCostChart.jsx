@@ -11,7 +11,18 @@ import {
 } from 'recharts';
 
 const ShippingCostChart = ({ data }) => {
-  if (!data || data.length === 0) return null;
+  console.log("ShippingCostChart data:", data); // Debug dữ liệu
+
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="chart-container">
+        <h3 className="chart-title">Chi phí vận chuyển trung bình theo danh mục</h3>
+        <div className="h-64 flex items-center justify-center">
+          <p className="text-gray-500">Không có dữ liệu để hiển thị</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chart-container">
@@ -36,7 +47,7 @@ const ShippingCostChart = ({ data }) => {
             />
             <Legend />
             <Bar 
-              dataKey="value" 
+              dataKey="cost" 
               name="Chi phí vận chuyển" 
               fill="#a855f7" 
               radius={[4, 4, 0, 0]}

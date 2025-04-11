@@ -11,17 +11,29 @@ import {
 } from 'recharts';
 
 const ForecastChart = ({ data, forecastTable }) => {
-  if (!data || !forecastTable) return null;
+  console.log("ForecastChart data:", data);
+  console.log("ForecastChart table:", forecastTable);
+
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="chart-container">
+        <h3 className="chart-title">Dự báo số đơn hàng theo tháng</h3>
+        <div className="h-64 flex items-center justify-center">
+          <p className="text-gray-500">Không có dữ liệu dự báo</p>
+        </div>
+      </div>
+    );
+  }
 
   const calculateStats = () => {
-    if (!forecastTable.length) return null;
+    if (!forecastTable || !Array.isArray(forecastTable) || forecastTable.length === 0) return null;
 
     const maxForecast = forecastTable.reduce((max, item) =>
-      item.predicted_orders > max.predicted_orders ? item : max
+      item.predicted_orders > max.predicted_orders ? item : max, forecastTable[0]
     );
 
     const minForecast = forecastTable.reduce((min, item) =>
-      item.predicted_orders < min.predicted_orders ? item : min
+      item.predicted_orders < min.predicted_orders ? item : min, forecastTable[0]
     );
 
     const avgForecast = Math.round(
@@ -93,35 +105,37 @@ const ForecastChart = ({ data, forecastTable }) => {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h3 className="text-lg font-medium mb-4">Bảng dự báo 6 tháng tới</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tháng
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Dự báo số đơn hàng
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {forecastTable.map((item, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {item.month}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.predicted_orders.toLocaleString('vi-VN')}
-                  </td>
+      {forecastTable && forecastTable.length > 0 && (
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <h3 className="text-lg font-medium mb-4">Bảng dự báo 6 tháng tới</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tháng
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Dự báo số đơn hàng
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {forecastTable.map((item, index) => (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {item.month}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.predicted_orders.toLocaleString('vi-VN')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

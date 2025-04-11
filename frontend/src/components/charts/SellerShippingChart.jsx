@@ -11,7 +11,18 @@ import {
 } from 'recharts';
 
 const SellerShippingChart = ({ data }) => {
-  if (!data || data.length === 0) return null;
+  console.log("SellerShippingChart data:", data); // Debug dữ liệu
+
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="chart-container">
+        <h3 className="chart-title">Thời gian giao hàng trung bình (Top 10 seller)</h3>
+        <div className="h-64 flex items-center justify-center">
+          <p className="text-gray-500">Không có dữ liệu để hiển thị</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chart-container">
@@ -36,7 +47,7 @@ const SellerShippingChart = ({ data }) => {
             />
             <Legend />
             <Bar
-              dataKey="value"
+              dataKey="duration"
               name="Thời gian giao hàng"
               fill="#f97316"
               radius={[0, 4, 4, 0]}

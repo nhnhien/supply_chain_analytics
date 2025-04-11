@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Tabs, Spin } from 'antd';
 import { useQuery } from '@tanstack/react-query';
+import Layout from '../components/common/Layout';
 import {
   getEdaSummary,
   getMonthlyOrdersData,
@@ -8,13 +9,13 @@ import {
   getDeliveryDelayData,
   getSellerShippingData,
   getShippingCostCategoryData,
-} from '@/api';
+} from '../api';
 
-import MonthlyOrdersChart from '@/components/charts/MonthlyOrdersChart';
-import TopCategoriesChart from '@/components/charts/TopCategoriesChart';
-import DeliveryDelayChart from '@/components/charts/DeliveryDelayChart';
-import SellerShippingChart from '@/components/charts/SellerShippingChart';
-import ShippingCostChart from '@/components/charts/ShippingCostChart';
+import MonthlyOrdersChart from '../components/charts/MonthlyOrdersChart';
+import TopCategoriesChart from '../components/charts/TopCategoriesChart';
+import DeliveryDelayChart from '../components/charts/DeliveryDelayChart';
+import SellerShippingChart from '../components/charts/SellerShippingChart';
+import ShippingCostChart from '../components/charts/ShippingCostChart';
 
 const Analysis = () => {
   const [activeTab, setActiveTab] = useState('charts');
@@ -61,41 +62,51 @@ const Analysis = () => {
   });
 
   if (loadingSummary) {
-    return <Spin tip="Đang tải dữ liệu tổng quan..." size="large" />;
+    return (
+      <Layout>
+        <Spin tip="Đang tải dữ liệu tổng quan..." size="large" />
+      </Layout>
+    );
   }
 
   if (isError) {
-    return <p className="text-red-500">❌ Không thể tải dữ liệu phân tích.</p>;
+    return (
+      <Layout>
+        <p className="text-red-500">❌ Không thể tải dữ liệu phân tích.</p>
+      </Layout>
+    );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Tổng quan dữ liệu */}
-      <Card>
-        <h2 className="text-xl font-semibold mb-2">Tổng quan dữ liệu</h2>
-        <ul className="list-disc list-inside">
-          <li>Số tháng có đơn hàng: {Object.keys(summary.data.orders_by_month || {}).length}</li>
-          <li>Tỷ lệ giao trễ: {summary.data.delivery_delay_rate}%</li>
-          <li>Số danh mục phổ biến: {Object.keys(summary.data.top_categories || {}).length}</li>
-        </ul>
-      </Card>
+    <Layout>
+      <div className="space-y-6">
+        {/* Tổng quan dữ liệu */}
+        <Card>
+          <h2 className="text-xl font-semibold mb-2">Tổng quan dữ liệu</h2>
+          <ul className="list-disc list-inside">
+            <li>Số tháng có đơn hàng: {Object.keys(summary?.data?.orders_by_month || {}).length}</li>
+            <li>Tỷ lệ giao trễ: {summary?.data?.delivery_delay_rate}%</li>
+            <li>Số danh mục phổ biến: {Object.keys(summary?.data?.top_categories || {}).length}</li>
+          </ul>
+        </Card>
 
-      {/* Tabs hiển thị biểu đồ hoặc dữ liệu thô */}
-      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key)} type="card">
-        <Tabs.TabPane tab="Biểu đồ" key="charts">
-          <div className="space-y-6">
-            <MonthlyOrdersChart data={monthlyOrders?.data} />
-            <TopCategoriesChart data={topCategories?.data} />
-            <DeliveryDelayChart data={deliveryDelay?.data?.data} />
-            <SellerShippingChart data={sellerShipping?.data} />
-            <ShippingCostChart data={shippingCost?.data} />
-          </div>
-        </Tabs.TabPane>
-        <Tabs.TabPane tab="Dữ liệu thô" key="raw">
-          <pre>{JSON.stringify(summary.data, null, 2)}</pre>
-        </Tabs.TabPane>
-      </Tabs>
-    </div>
+        {/* Tabs hiển thị biểu đồ hoặc dữ liệu thô */}
+        <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key)} type="card">
+          <Tabs.TabPane tab="Biểu đồ" key="charts">
+            <div className="space-y-6">
+              <MonthlyOrdersChart data={monthlyOrders?.data?.data} />
+              <TopCategoriesChart data={topCategories?.data?.data} />
+              <DeliveryDelayChart data={deliveryDelay?.data?.data} />
+              <SellerShippingChart data={sellerShipping?.data?.data} />
+              <ShippingCostChart data={shippingCost?.data?.data} />
+            </div>
+          </Tabs.TabPane>
+          <Tabs.TabPane tab="Dữ liệu thô" key="raw">
+            <pre>{JSON.stringify(summary?.data, null, 2)}</pre>
+          </Tabs.TabPane>
+        </Tabs>
+      </div>
+    </Layout>
   );
 };
 

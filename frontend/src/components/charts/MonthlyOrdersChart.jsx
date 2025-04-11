@@ -11,9 +11,18 @@ import {
 } from 'recharts';
 
 const MonthlyOrdersChart = ({ data }) => {
-    console.log("MonthlyOrdersChart data:", data); // ✅ debug
+  console.log("MonthlyOrdersChart data:", data); // Kiểm tra dữ liệu đầu vào
 
-  if (!data || data.length === 0) return null;
+  if (!data || data.length === 0) {
+    return (
+      <div className="chart-container">
+        <h3 className="chart-title">Số lượng đơn hàng theo tháng</h3>
+        <div className="h-64 flex items-center justify-center">
+          <p className="text-gray-500">Không có dữ liệu biểu đồ</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chart-container">
