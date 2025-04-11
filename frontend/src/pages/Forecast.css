@@ -1,0 +1,40 @@
+.forecast {
+    padding: 20px;
+  }
+  
+  .forecast-icon {
+    background-color: #fff3e0;
+    color: #ff9800;
+  }
+  
+  .average-icon {
+    background-color: #f3e5f5;
+    color: #9c27b0;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .forecast-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .forecast-table th,
+  .forecast-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .forecast-table th {
+    font-weight: 500;
+    color: #666;
+    background-color: #f9f9f9;
+  }
+  
+  .forecast-table tbody tr:hover {
+    background-color: #f5f5f5;
+  }
+  

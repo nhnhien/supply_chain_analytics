@@ -1,0 +1,75 @@
+.reorder {
+    padding: 20px;
+  }
+  
+  .tabs {
+    display: flex;
+    margin-bottom: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.2s;
+  }
+  
+  .tab:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .tab.active {
+    background-color: #e3f2fd;
+    color: #2196f3;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .reorder-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .reorder-table th,
+  .reorder-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .reorder-table th {
+    font-weight: 500;
+    color: #666;
+    background-color: #f9f9f9;
+    position: sticky;
+    top: 0;
+  }
+  
+  .reorder-table tbody tr:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    gap: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    .charts-container {
+      grid-template-columns: 1fr;
+    }
+  }
+  
