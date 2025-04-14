@@ -2,6 +2,48 @@
   padding: 20px;
 }
 
+/* NEW: Container for dropdowns */
+.selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* NEW: Style for both category and model selectors */
+.category-selector,
+.model-selector {
+  display: flex;
+  flex-direction: column;
+  min-width: 250px;
+}
+
+.category-selector label,
+.model-selector label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+.category-selector select,
+.model-selector select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.category-selector select:focus,
+.model-selector select:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+/* Existing styles retained */
 .forecast-icon {
   background-color: #fff3e0;
   color: #ff9800;
@@ -113,10 +155,16 @@
 
 /* Cải thiện hiển thị trên thiết bị di động */
 @media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
+  .selectors {
+    flex-direction: column;
+    gap: 16px;
   }
-  
+
+  .category-selector,
+  .model-selector {
+    width: 100%;
+  }
+
   .forecast-table th,
   .forecast-table td {
     padding: 8px 10px;

@@ -3,7 +3,7 @@ import axios from "axios"
 // Cấu hình axios với timeout dài hơn
 const api = axios.create({
   baseURL: "http://localhost:8000", // Thay đổi URL này theo địa chỉ backend của bạn
-  timeout: 60000, // Tăng timeout từ 30s lên 60s
+  timeout: 600000, // Tăng timeout từ 30s lên 60s
   headers: {
     "Content-Type": "application/json",
   },
@@ -77,20 +77,20 @@ export const getDemandForecast = () => {
   const expireTime = 60 * 60 * 1000; // 1 giờ
 
   return withRetry(async () => {
-    // Kiểm tra cache
+    // Check cache
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       const { data, timestamp } = JSON.parse(cached);
       if (Date.now() - timestamp < expireTime) {
         console.log("✅ Using cached forecast data");
-        return { data };
+        return { data: Array.isArray(data) ? data : [data] };
       }
     }
 
-    // Nếu không có cache hoặc đã hết hạn
+    // Fetch from API
     const response = await axios.get(`http://localhost:8000/forecast/demand?t=${Date.now()}`);
 
-    // Lưu vào cache
+    // Save to cache
     localStorage.setItem(
       cacheKey,
       JSON.stringify({
@@ -100,9 +100,10 @@ export const getDemandForecast = () => {
     );
 
     console.log("🆕 Fresh forecast data fetched and cached");
-    return response;
+    return { data: Array.isArray(response.data) ? response.data : [response.data] };
   });
 };
+
 
 // API cho chiến lược tồn kho với retry và cache
 export const getReorderStrategy = () => withRetry(withCache(() => api.get("/reorder/strategy"), "reorderStrategy"))

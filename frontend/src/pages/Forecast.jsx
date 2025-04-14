@@ -18,16 +18,15 @@ import { useNavigate } from "react-router-dom";
 import "./Forecast.css";
 
 const Forecast = () => {
-  const [forecastData, setForecastData] = useState(null);
+  const [forecastData, setForecastData] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedModel, setSelectedModel] = useState("xgboost");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [selectedModel, setSelectedModel] = useState("xgboost"); // "xgboost" | "arima" | "both"
   const navigate = useNavigate();
 
   useEffect(() => {
-    localStorage.removeItem("demandForecast");
-
     const fetchForecastData = async () => {
       try {
         const uploadedFiles = getUploadedFiles();
@@ -38,29 +37,28 @@ const Forecast = () => {
 
         setLoading(true);
         setError(null);
-        const response = await getDemandForecast();
 
-        if (!response.data || !response.data.forecast_table || !response.data.chart_data) {
-          throw new Error("Dữ liệu không hợp lệ từ API");
+        const response = await getDemandForecast();
+        let allResults = [];
+
+        // ✅ Support both object (single category) and array (multi-category)
+        if (Array.isArray(response.data)) {
+          allResults = response.data.filter((cat) => cat.status === "success");
+        } else if (response.data?.status === "success") {
+          allResults = [{ ...response.data, category: response.data.category || "Tổng thể" }];
         }
 
-        setForecastData(response.data);
+        if (allResults.length === 0) throw new Error("Không có danh mục nào đủ dữ liệu để dự báo.");
 
-              // 🔍 Log ra các type hiện có trong dữ liệu trả về
-      console.log("📊 forecastData types:", [
-        ...new Set(response.data.chart_data.map(d => d.type))
-      ]);
-
+        setForecastData(allResults);
+        setSelectedCategory(allResults[0].category);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching forecast data:", err);
         setError(err.message || "Không thể tải dữ liệu dự báo. Vui lòng thử lại sau.");
         setLoading(false);
-
         if (retryCount < 3) {
-          setTimeout(() => {
-            setRetryCount((prev) => prev + 1);
-          }, 5000);
+          setTimeout(() => setRetryCount((prev) => prev + 1), 5000);
         }
       }
     };
@@ -68,21 +66,43 @@ const Forecast = () => {
     fetchForecastData();
   }, [navigate, retryCount]);
 
-  const handleRetry = () => {
-    setRetryCount((prev) => prev + 1);
-  };
+  const handleRetry = () => setRetryCount((prev) => prev + 1);
+
+  const currentCategoryData = forecastData.find((cat) => cat.category === selectedCategory);
+
+  const historicalData = currentCategoryData?.chart_data.filter((item) => item.type === "Thực tế") || [];
+  const forecastedXGB = currentCategoryData?.chart_data.filter((item) => item.type === "XGBoost") || [];
+  const forecastedARIMA = currentCategoryData?.chart_data.filter((item) => item.type === "ARIMA") || [];
+
+  const currentForecast =
+    selectedModel === "xgboost"
+      ? forecastedXGB
+      : selectedModel === "arima"
+      ? forecastedARIMA
+      : [...forecastedXGB];
+
+  const firstForecast = currentForecast[0];
+  const lastActual = historicalData[historicalData.length - 1];
+
+  const forecastChange =
+    lastActual && firstForecast
+      ? (((firstForecast.orders - lastActual.orders) / lastActual.orders) * 100).toFixed(1)
+      : 0;
+
+  const avgForecast =
+    currentForecast.length > 0
+      ? (
+          currentForecast.reduce((sum, item) => sum + (item.orders || 0), 0) / currentForecast.length
+        ).toFixed(0)
+      : 0;
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="custom-tooltip">
           <p className="tooltip-label">{`Tháng: ${label}`}</p>
-          <p className="tooltip-value">
-            {`${payload[0].name}: ${payload[0].value.toLocaleString()}`}
-          </p>
-          {payload[0].payload.type && (
-            <p className="tooltip-type">{`Loại: ${payload[0].payload.type}`}</p>
-          )}
+          <p className="tooltip-value">{`${payload[0].name}: ${payload[0].value.toLocaleString()}`}</p>
+          {payload[0].payload.type && <p className="tooltip-type">{`Loại: ${payload[0].payload.type}`}</p>}
         </div>
       );
     }
@@ -101,55 +121,34 @@ const Forecast = () => {
         <button className="retry-button" onClick={handleRetry}>
           Thử lại
         </button>
-        <p className="retry-note">
-          Lưu ý: Sau khi tải lên dữ liệu mới, hệ thống cần thời gian để xử lý và tính toán dự báo.
-        </p>
+        <p className="retry-note">Lưu ý: Sau khi tải lên dữ liệu mới, hệ thống cần thời gian để xử lý và tính toán dự báo.</p>
       </div>
     );
-
-  const historicalData = forecastData.chart_data.filter((item) => item.type === "Thực tế");
-  const forecastedXGB = forecastData.chart_data.filter((item) => item.type === "XGBoost");
-  const forecastedARIMA = forecastData.chart_data.filter((item) => item.type === "ARIMA");
-  console.log("📊 Forecast data types:", {
-    historicalData,
-    forecastedXGB,
-    forecastedARIMA
-  });
-  
-  const currentForecast =
-    selectedModel === "xgboost"
-      ? forecastedXGB
-      : selectedModel === "arima"
-      ? forecastedARIMA
-      : [...forecastedXGB]; // default
-
-  const firstForecast = currentForecast[0];
-  const lastActual = historicalData[historicalData.length - 1];
-
-  const forecastChange =
-    lastActual && firstForecast
-      ? (((firstForecast.orders - lastActual.orders) / lastActual.orders) * 100).toFixed(1)
-      : 0;
-
-  const avgForecast =
-    currentForecast.length > 0
-      ? (
-          currentForecast.reduce((sum, item) => sum + (item.orders || 0), 0) /
-          currentForecast.length
-        ).toFixed(0)
-      : 0;
 
   return (
     <div className="forecast">
       <h1 className="page-title">Dự báo nhu cầu</h1>
 
-      <div className="model-selector">
-        <label>Chọn mô hình dự báo: </label>
-        <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
-          <option value="xgboost">XGBoost</option>
-          <option value="arima">ARIMA</option>
-          <option value="both">So sánh cả 2 mô hình</option>
-        </select>
+      <div className="selectors">
+        <div className="category-selector">
+          <label>Chọn danh mục: </label>
+          <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+            {forecastData.map((cat) => (
+              <option key={cat.category} value={cat.category}>
+                {cat.category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="model-selector">
+          <label>Chọn mô hình dự báo: </label>
+          <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
+            <option value="xgboost">XGBoost</option>
+            <option value="arima">ARIMA</option>
+            <option value="both">So sánh cả 2 mô hình</option>
+          </select>
+        </div>
       </div>
 
       {/* Thống kê dự báo */}
@@ -182,13 +181,9 @@ const Forecast = () => {
         </div>
         <div className="card-body">
           <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={[...historicalData, ...forecastedXGB, ...forecastedARIMA]}>
+            <LineChart data={[...historicalData, ...forecastedXGB, ...forecastedARIMA]}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="month"
-                allowDuplicatedCategory={false}
-                tickFormatter={(value) => value.split("-")[1]}
-              />
+              <XAxis dataKey="month" allowDuplicatedCategory={false} tickFormatter={(value) => value.split("-")[1]} />
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
@@ -201,7 +196,6 @@ const Forecast = () => {
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
                 connectNulls
-                isAnimationActive={true}
                 animationDuration={1000}
                 data={historicalData}
               />
@@ -215,7 +209,6 @@ const Forecast = () => {
                   strokeDasharray="5 5"
                   dot={{ r: 4 }}
                   connectNulls
-                  isAnimationActive={true}
                   animationDuration={1000}
                   data={forecastedXGB}
                 />
@@ -230,7 +223,6 @@ const Forecast = () => {
                   strokeDasharray="6 3"
                   dot={{ r: 4 }}
                   connectNulls
-                  isAnimationActive={true}
                   animationDuration={1000}
                   data={forecastedARIMA}
                 />
@@ -258,15 +250,13 @@ const Forecast = () => {
               <tbody>
                 {currentForecast.map((item, index) => {
                   const prev = currentForecast[index - 1]?.orders || item.orders;
-                  const diff = prev && prev !== 0
-                  ? (((item.orders - prev) / prev) * 100).toFixed(1)
-                  : 0;
+                  const diff = prev && prev !== 0 ? (((item.orders - prev) / prev) * 100).toFixed(1) : 0;
                   return (
                     <tr key={index}>
                       <td>{item.month}</td>
                       <td>{item.orders != null ? item.orders.toLocaleString() : "-"}</td>
                       <td className={diff >= 0 ? "positive" : "negative"}>
-                      {diff > 0 ? "+" : diff < 0 ? "" : ""}{diff}%
+                        {diff > 0 ? "+" : ""}{diff}%
                       </td>
                     </tr>
                   );
