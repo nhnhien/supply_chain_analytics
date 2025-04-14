@@ -72,7 +72,37 @@ export const getShippingCostCategoryChart = () =>
   withRetry(withCache(() => api.get("/analyze/chart/shipping-cost-category"), "shippingCostCategoryChart"))
 
 // API cho dự báo với retry và cache
-export const getDemandForecast = () => withRetry(withCache(() => api.get("/forecast/demand"), "demandForecast"))
+export const getDemandForecast = () => {
+  const cacheKey = "demandForecast";
+  const expireTime = 60 * 60 * 1000; // 1 giờ
+
+  return withRetry(async () => {
+    // Kiểm tra cache
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < expireTime) {
+        console.log("✅ Using cached forecast data");
+        return { data };
+      }
+    }
+
+    // Nếu không có cache hoặc đã hết hạn
+    const response = await axios.get(`http://localhost:8000/forecast/demand?t=${Date.now()}`);
+
+    // Lưu vào cache
+    localStorage.setItem(
+      cacheKey,
+      JSON.stringify({
+        data: response.data,
+        timestamp: Date.now(),
+      })
+    );
+
+    console.log("🆕 Fresh forecast data fetched and cached");
+    return response;
+  });
+};
 
 // API cho chiến lược tồn kho với retry và cache
 export const getReorderStrategy = () => withRetry(withCache(() => api.get("/reorder/strategy"), "reorderStrategy"))

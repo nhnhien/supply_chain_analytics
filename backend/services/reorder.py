@@ -3,6 +3,7 @@ import numpy as np
 from services.preprocess import preprocess_data
 from services.forecast import forecast_demand
 from utils.cache import get_cache, set_cache
+import os
 
 def calculate_reorder_strategy():
     cache_key = "reorder_strategy"
@@ -14,7 +15,7 @@ def calculate_reorder_strategy():
     forecast = forecast_demand(periods=6)["forecast_table"]
 
     forecast_df = pd.DataFrame(forecast)
-    forecast_df["predicted_orders"] = forecast_df["predicted_orders"].astype(int)
+    forecast_df["predicted_orders"] = forecast_df["xgboost"].astype(int) 
     avg_demand_per_month = forecast_df["predicted_orders"].mean()
 
     lead_time_df = df.groupby("product_category_name")["shipping_duration"].mean().reset_index()
@@ -86,6 +87,8 @@ def generate_optimization_recommendations(strategy_df):
             })
 
     recommendations_df = pd.DataFrame(recommendations)
-    recommendations_df.to_excel("charts/optimization_recommendations.xlsx", index=False)
+    output_dir = os.path.join("charts", "reorder")
+    os.makedirs(output_dir, exist_ok=True)
+    recommendations_df.to_excel(os.path.join(output_dir, "optimization_recommendations.xlsx"), index=False)
 
     return recommendations_df

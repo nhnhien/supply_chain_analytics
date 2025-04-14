@@ -2,7 +2,7 @@ import os
 from services.preprocess import preprocess_data
 import matplotlib.pyplot as plt
 
-CHART_FOLDER = os.path.join(os.path.dirname(__file__), "charts")
+CHART_FOLDER = os.path.join(os.path.dirname(__file__), "charts", "eda")
 os.makedirs(CHART_FOLDER, exist_ok=True)
 
 def save_chart(fig, filename):

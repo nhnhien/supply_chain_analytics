@@ -1,74 +1,125 @@
 .forecast {
-    padding: 20px;
-  }
-  
-  .forecast-icon {
-    background-color: #fff3e0;
-    color: #ff9800;
-  }
-  
-  .average-icon {
-    background-color: #f3e5f5;
-    color: #9c27b0;
-  }
-  
-  .table-container {
-    overflow-x: auto;
-  }
-  
-  .forecast-table {
-    width: 100%;
-    border-collapse: collapse;
+  padding: 20px;
+}
+
+.forecast-icon {
+  background-color: #fff3e0;
+  color: #ff9800;
+}
+
+.average-icon {
+  background-color: #f3e5f5;
+  color: #9c27b0;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.forecast-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.forecast-table th,
+.forecast-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.forecast-table th {
+  font-weight: 500;
+  color: #666;
+  background-color: #f9f9f9;
+}
+
+.forecast-table tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+.error-with-retry {
+  text-align: center;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin: 20px 0;
+}
+
+.retry-button {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+  background-color: #1976d2;
+}
+
+.retry-note {
+  margin-top: 15px;
+  color: #666;
+  font-size: 14px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.positive {
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.negative {
+  color: #f44336;
+  font-weight: 500;
+}
+
+/* Tooltip tùy chỉnh */
+.custom-tooltip {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tooltip-label {
+  font-weight: 600;
+  margin: 0 0 5px 0;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.tooltip-value {
+  margin: 2px 0;
+  font-size: 14px;
+}
+
+.tooltip-type {
+  margin: 5px 0 0 0;
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Cải thiện hiển thị trên thiết bị di động */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
   
   .forecast-table th,
   .forecast-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
+    padding: 8px 10px;
+    font-size: 13px;
   }
-  
-  .forecast-table th {
-    font-weight: 500;
-    color: #666;
-    background-color: #f9f9f9;
-  }
-  
-  .forecast-table tbody tr:hover {
-    background-color: #f5f5f5;
-  }
-  
-  .error-with-retry {
-    text-align: center;
-    padding: 30px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin: 20px 0;
-  }
-  
-  .retry-button {
-    background-color: #2196f3;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    margin-top: 15px;
-    transition: background-color 0.2s;
-  }
-  
-  .retry-button:hover {
-    background-color: #1976d2;
-  }
-  
-  .retry-note {
-    margin-top: 15px;
-    color: #666;
-    font-size: 14px;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  
+}
