@@ -204,3 +204,19 @@
     }
   }
   
+  .download-button {
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 8px 12px;
+    background-color: #2196f3;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  
+  .download-button:hover {
+    background-color: #1976d2;
+  }
+  

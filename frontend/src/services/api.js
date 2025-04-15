@@ -133,6 +133,7 @@ export const clearAllCache = () => {
     "topLeadTime",
     "topInventory",
     "topHoldingCost",
+    "topPotentialSaving",
     "uploadedFiles",
     "dataLoaded",
   ]
@@ -166,10 +167,11 @@ export const saveUploadedFiles = (files) => {
 }
 
 // Lấy thông tin về file đã upload
-export const getUploadedFiles = () => {
-  const savedFiles = localStorage.getItem("uploadedFiles")
-  return savedFiles ? JSON.parse(savedFiles) : []
+export const getUploadedFiles = async () => {
+  const savedFiles = localStorage.getItem("uploadedFiles");
+  return savedFiles ? JSON.parse(savedFiles) : [];
 }
+
 
 // Kiểm tra xem dữ liệu đã được tải trước đó chưa
 export const isDataLoaded = () => {
@@ -180,6 +182,25 @@ export const isDataLoaded = () => {
 export const markDataAsLoaded = () => {
   localStorage.setItem("dataLoaded", "true")
 }
+export const getTopPotentialSaving = () =>
+  withRetry(withCache(() => api.get("/reorder/charts/top-potential-saving"), "topPotentialSaving"));
+
+
+export const downloadRecommendationExcel = async () => {
+  const response = await api.get("/reorder/download/recommendations", {
+    responseType: "blob", // để browser hiểu là file
+  });
+
+  const blob = new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "optimization_recommendations.xlsx");
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
+
 
 // Tải trước tất cả dữ liệu sau khi upload
 export const preloadAllData = async () => {
@@ -199,6 +220,7 @@ export const preloadAllData = async () => {
       getTopLeadTime(),
       getTopInventory(),
       getTopHoldingCost(),
+      getTopPotentialSaving (),
     ]
 
     // Chạy tất cả các API calls song song

@@ -22,12 +22,19 @@ const UploadPage = () => {
   const [isPreloading, setIsPreloading] = useState(false)
   const [preloadProgress, setPreloadProgress] = useState(0)
   const navigate = useNavigate()
+  const [loadingUploaded, setLoadingUploaded] = useState(true)
 
+  
   // Tải thông tin về các file đã upload từ localStorage khi component mount
   useEffect(() => {
-    const savedFiles = getUploadedFiles()
-    setUploadedFiles(savedFiles)
+    const fetchUploadedFiles = async () => {
+      const savedFiles = await getUploadedFiles()
+      setUploadedFiles(savedFiles)
+      setLoadingUploaded(false)
+    }
+    fetchUploadedFiles()
   }, [])
+  
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files)
@@ -113,8 +120,9 @@ const UploadPage = () => {
       saveUploadedFiles(files)
 
       // Cập nhật state với các file đã upload
-      setUploadedFiles(getUploadedFiles())
-
+      const uploaded = await getUploadedFiles()
+      setUploadedFiles(uploaded)
+      
       // Thông báo thành công với thông tin thêm về thời gian xử lý
       toast.success("Tải lên thành công! Đang tải trước dữ liệu cho tất cả các trang...", { duration: 6000 })
 

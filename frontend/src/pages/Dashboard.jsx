@@ -35,7 +35,7 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         // Kiểm tra xem đã có file được upload chưa
-        const uploadedFiles = getUploadedFiles()
+        const uploadedFiles = await getUploadedFiles()
         if (uploadedFiles.length === 0) {
           // Nếu chưa có file nào được upload, chuyển hướng đến trang upload
           navigate("/upload")

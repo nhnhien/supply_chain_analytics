@@ -29,27 +29,26 @@ const Forecast = () => {
   useEffect(() => {
     const fetchForecastData = async () => {
       try {
-        const uploadedFiles = getUploadedFiles();
-        if (uploadedFiles.length === 0) {
+        const uploadedFiles = await getUploadedFiles(); // <- chắc chắn chờ xong
+        if (!uploadedFiles || uploadedFiles.length === 0) {
           navigate("/upload");
           return;
         }
-
+  
         setLoading(true);
         setError(null);
-
+  
         const response = await getDemandForecast();
         let allResults = [];
-
-        // ✅ Support both object (single category) and array (multi-category)
+  
         if (Array.isArray(response.data)) {
           allResults = response.data.filter((cat) => cat.status === "success");
         } else if (response.data?.status === "success") {
           allResults = [{ ...response.data, category: response.data.category || "Tổng thể" }];
         }
-
+  
         if (allResults.length === 0) throw new Error("Không có danh mục nào đủ dữ liệu để dự báo.");
-
+  
         setForecastData(allResults);
         setSelectedCategory(allResults[0].category);
         setLoading(false);
@@ -62,10 +61,10 @@ const Forecast = () => {
         }
       }
     };
-
+  
     fetchForecastData();
-  }, [navigate, retryCount]);
-
+  }, [retryCount, navigate]); // giữ nguyên, nhưng tránh gọi khi chưa có file
+  
   const handleRetry = () => setRetryCount((prev) => prev + 1);
 
   const currentCategoryData = forecastData.find((cat) => cat.category === selectedCategory);
@@ -266,6 +265,66 @@ const Forecast = () => {
           </div>
         </div>
       </div>
+
+      {currentCategoryData?.mae_rmse_comparison && (
+  <div className="card">
+    <div className="card-header">
+      <h2 className="card-title">So sánh độ chính xác mô hình</h2>
+    </div>
+    <div className="card-body">
+      <table className="forecast-table">
+        <thead>
+          <tr>
+            <th>Mô hình</th>
+            <th>MAE</th>
+            <th>RMSE</th>
+          </tr>
+        </thead>
+        <tbody>
+  {["xgboost", "arima"].map((model) => {
+    const mae = currentCategoryData.mae_rmse_comparison[model].mae;
+    const rmse = currentCategoryData.mae_rmse_comparison[model].rmse;
+
+    const betterMaeModel =
+      currentCategoryData.mae_rmse_comparison.xgboost.mae <
+      currentCategoryData.mae_rmse_comparison.arima.mae
+        ? "xgboost"
+        : "arima";
+
+    const betterRmseModel =
+      currentCategoryData.mae_rmse_comparison.xgboost.rmse <
+      currentCategoryData.mae_rmse_comparison.arima.rmse
+        ? "xgboost"
+        : "arima";
+
+    return (
+<tr key={model}>
+  <td style={{ fontWeight: "600" }}>{model.toUpperCase()}</td>
+
+  <td className={model === betterMaeModel ? "highlight-better" : "highlight-worse"}>
+    {mae.toLocaleString()}
+    {model === betterMaeModel && (
+      <span className="ml-1" title="Chỉ số MAE tốt hơn">👍</span>
+    )}
+  </td>
+
+  <td className={model === betterRmseModel ? "highlight-better" : "highlight-worse"}>
+    {rmse.toLocaleString()}
+    {model === betterRmseModel && (
+      <span className="ml-1" title="Chỉ số RMSE tốt hơn">👍</span>
+    )}
+  </td>
+</tr>
+
+    );
+  })}
+</tbody>
+
+      </table>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
