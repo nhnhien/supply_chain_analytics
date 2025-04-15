@@ -77,9 +77,8 @@ def get_top_holding_cost():
 @reorder_bp.route("/charts/top-potential-saving", methods=["GET"])
 def get_top_potential_saving():
     strategy = calculate_reorder_strategy()
-    recommendations_df = generate_optimization_recommendations(strategy)
+    recommendations_df = generate_optimization_recommendations(strategy, return_df=True)
 
-    # Kiểm tra xem recommendations_df có cột và dữ liệu 'potential_saving' hay không
     if recommendations_df.empty or "potential_saving" not in recommendations_df.columns:
         print("⚠️ Không có cột hoặc dữ liệu potential_saving.")
         return jsonify({"data": []})
@@ -89,20 +88,25 @@ def get_top_potential_saving():
     return jsonify({"data": data})
 
 
+
 @reorder_bp.route("/download/recommendations", methods=["GET"])
 def download_recommendations():
     try:
         strategy = calculate_reorder_strategy()
-        strategy_df = pd.DataFrame(strategy)
-
-        # Nếu đã generate recommendation từ trước thì đọc lại
         recommendations_path = os.path.join("charts", "reorder", "optimization_recommendations.xlsx")
+
+        # Nếu file đã tồn tại → gửi luôn
         if os.path.exists(recommendations_path):
             return send_file(recommendations_path, as_attachment=True)
+
+        # Nếu chưa có file → tạo mới
+        from services.reorder import generate_optimization_recommendations
+        generated_path = generate_optimization_recommendations(strategy)
+
+        if generated_path and os.path.exists(generated_path):
+            return send_file(generated_path, as_attachment=True)
         else:
-            # Nếu chưa có thì tạo mới
-            from services.reorder import generate_optimization_recommendations
-            generate_optimization_recommendations(strategy)
-            return send_file(recommendations_path, as_attachment=True)
+            return jsonify({"error": "Không có khuyến nghị để tải"}), 400
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500

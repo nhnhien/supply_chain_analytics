@@ -57,18 +57,22 @@ def get_forecast_for_all_categories():
         print(f"🚀 Forecasting for {len(limited_categories)} categories in parallel...")
         with ProcessPoolExecutor(max_workers=4) as executor:
             futures = {executor.submit(safe_forecast, cat): cat for cat in limited_categories}
-            for future in as_completed(futures):
-                category = futures[future]
-                try:
-                    result = future.result()
-                    all_forecasts.append(result)
-                except Exception as e:
-                    print(f"❌ Forecast failed for {category}: {str(e)}")
+        for future in as_completed(futures):
+            category = futures[future]
+            try:
+                result = future.result()
+                print(f"✅ Forecast success for {category} - status: {result.get('status')}")
+                all_forecasts.append(result)
+            except Exception as e:
+                print(f"❌ Forecast failed for {category}: {str(e)}")
 
-        set_cache(cache_key, all_forecasts, ttl_seconds=60 * 60)
+        # 👉 Lọc ra những danh mục thành công
+        successful_forecasts = [f for f in all_forecasts if f.get("status") == "success"]
+        print(f"📊 Tổng cộng {len(successful_forecasts)}/{len(all_forecasts)} danh mục có dự báo thành công")
 
-        print(f"✅ All forecasts completed in {round(time.time() - t0, 2)}s")
-        return jsonify(all_forecasts)
+        set_cache(cache_key, successful_forecasts, ttl_seconds=60 * 60)
+        return jsonify(successful_forecasts)
+
 
     except Exception as e:
         print(f"❌ Error in /forecast/demand/all: {str(e)}")

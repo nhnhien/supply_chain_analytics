@@ -26,6 +26,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, CheckCircle, Info } from "react-feather";
 import "./Reorder.css";
+import { downloadRecommendationExcel } from "../services/api";
 
 const Reorder = () => {
   const [reorderStrategy, setReorderStrategy] = useState([]);
@@ -42,7 +43,15 @@ const Reorder = () => {
   const [activeTab, setActiveTab] = useState("strategy");
   const [retryCount, setRetryCount] = useState(0);
   const navigate = useNavigate();
-
+  const handleDownloadExcel = async () => {
+    try {
+      await downloadRecommendationExcel();
+    } catch (error) {
+      alert("❌ Không thể tải file Excel khuyến nghị. Có thể chưa có dữ liệu phù hợp.");
+      console.error("Download failed:", error);
+    }
+  };
+  
   useEffect(() => {
     const fetchReorderData = async () => {
       try {
@@ -293,15 +302,12 @@ const Reorder = () => {
               <h2 className="card-title">Khuyến nghị tối ưu hóa tồn kho</h2>
             </div>
             <div className="card-body">
-              <div className="download-section">
-                <a
-                  href="http://localhost:8000/reorder/download/recommendations"
-                  download
-                  className="download-button"
-                >
-                  📥 Tải Excel khuyến nghị
-                </a>
-              </div>
+            <div className="download-section">
+  <button className="download-button" onClick={handleDownloadExcel}>
+    📥 Tải Excel khuyến nghị
+  </button>
+</div>
+
               <div className="recommendations-intro">
                 <Info size={20} />
                 <p>

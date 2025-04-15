@@ -76,25 +76,17 @@ def calculate_reorder_strategy():
     return strategy
 
 
-def generate_optimization_recommendations(strategy_data):
-    """
-    Tạo đề xuất tối ưu hóa tồn kho dựa trên chiến lược hiện tại.
-    - Ưu tiên các danh mục có chi phí lưu kho cao.
-    - Giảm Safety Stock và Reorder Point.
-    - Tính toán potential_saving dựa trên thông số thực tế.
-    """
+def generate_optimization_recommendations(strategy_data, return_df=False):
+    recommendations = []
+
     strategy_df = pd.DataFrame(strategy_data)
 
     if "holding_cost" not in strategy_df.columns:
-        print("❌ Không có cột 'holding_cost' trong dữ liệu chiến lược. Bỏ qua generate_optimization_recommendations.")
-        return pd.DataFrame()
+        print("❌ Không có cột 'holding_cost'.")
+        return pd.DataFrame() if return_df else None
 
     strategy_df["holding_cost"] = pd.to_numeric(strategy_df["holding_cost"], errors="coerce").fillna(0).astype(int)
-
-    # Lọc ra top 10 danh mục có chi phí lưu kho cao nhất
     high_holding_cost = strategy_df.sort_values("holding_cost", ascending=False).head(10)
-
-    recommendations = []
 
     for _, row in high_holding_cost.iterrows():
         category = row["category"]
@@ -105,7 +97,6 @@ def generate_optimization_recommendations(strategy_data):
         holding_cost_per_unit = row.get("holding_cost_per_unit", 5)
 
         if holding_cost > 100_000:
-            # Giảm tồn kho hợp lý
             new_safety_stock = int(safety_stock * 0.8)
             new_reorder_point = int(reorder_point * 0.9)
             new_optimal_inventory = new_safety_stock + new_reorder_point
@@ -125,15 +116,18 @@ def generate_optimization_recommendations(strategy_data):
                 "potential_saving": potential_saving
             })
 
-    # Xuất file Excel nếu có dữ liệu
+    if not recommendations:
+        print("⚠️ Không có khuyến nghị nào đủ điều kiện.")
+        return pd.DataFrame() if return_df else None
+
+    df = pd.DataFrame(recommendations)
+
+    # ✅ Ghi file Excel để hỗ trợ route download
     output_dir = os.path.join("charts", "reorder")
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "optimization_recommendations.xlsx")
+    df.to_excel(output_path, index=False)
 
-    if recommendations:
-        pd.DataFrame(recommendations).to_excel(output_path, index=False)
-        print(f"✅ File khuyến nghị đã được tạo tại: {output_path}")
-    else:
-        print("⚠️ Không có khuyến nghị nào đủ điều kiện tạo Excel.")
+    print(f"✅ File khuyến nghị đã được tạo tại: {output_path}")
 
-    return pd.DataFrame(recommendations)
+    return df if return_df else output_path

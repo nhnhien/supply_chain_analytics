@@ -29,41 +29,41 @@ const Forecast = () => {
   useEffect(() => {
     const fetchForecastData = async () => {
       try {
-        const uploadedFiles = await getUploadedFiles(); // <- chắc chắn chờ xong
+        const uploadedFiles = await getUploadedFiles();
         if (!uploadedFiles || uploadedFiles.length === 0) {
           navigate("/upload");
           return;
         }
-  
+
         setLoading(true);
         setError(null);
-  
-        const response = await getDemandForecast();
-        let allResults = [];
-  
-        if (Array.isArray(response.data)) {
-          allResults = response.data.filter((cat) => cat.status === "success");
-        } else if (response.data?.status === "success") {
-          allResults = [{ ...response.data, category: response.data.category || "Tổng thể" }];
+
+        const response = await getDemandForecast(); // Không còn `.data`
+        console.log("📦 Raw forecast response:", response);
+
+          const allResults = Array.isArray(response.data)
+          ? response.data.filter((cat) => cat.status === "success")
+          : [];
+        
+        if (allResults.length === 0) {
+          throw new Error("Không có danh mục nào đủ dữ liệu để dự báo.");
         }
-  
-        if (allResults.length === 0) throw new Error("Không có danh mục nào đủ dữ liệu để dự báo.");
-  
+
         setForecastData(allResults);
         setSelectedCategory(allResults[0].category);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching forecast data:", err);
-        setError(err.message || "Không thể tải dữ liệu dự báo. Vui lòng thử lại sau.");
+        setError(err.message || "Không thể tải dữ liệu dự báo.");
         setLoading(false);
         if (retryCount < 3) {
           setTimeout(() => setRetryCount((prev) => prev + 1), 5000);
         }
       }
     };
-  
+
     fetchForecastData();
-  }, [retryCount, navigate]); // giữ nguyên, nhưng tránh gọi khi chưa có file
+  }, [retryCount, navigate]);
   
   const handleRetry = () => setRetryCount((prev) => prev + 1);
 
