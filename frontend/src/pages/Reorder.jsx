@@ -10,6 +10,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ScatterChart,
+  ZAxis,
+  Scatter,
 } from "recharts";
 import {
   getReorderStrategy,
@@ -20,6 +23,8 @@ import {
   getTopHoldingCost,
   getTopPotentialSaving,
   getUploadedFiles,
+  getSupplierClusters,
+  getBottleneckAnalysis,
 } from "../services/api";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
@@ -36,6 +41,9 @@ const Reorder = () => {
   const [topInventory, setTopInventory] = useState([]);
   const [topPotentialSaving, setTopPotentialSaving] = useState([]);
   const [topHoldingCost, setTopHoldingCost] = useState([]);
+  const [supplierClusters, setSupplierClusters] = useState([]);
+  const [bottlenecks, setBottlenecks] = useState([]);
+
   const [optimizationRecommendations, setOptimizationRecommendations] =
     useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,11 +55,13 @@ const Reorder = () => {
     try {
       await downloadRecommendationExcel();
     } catch (error) {
-      alert("❌ Không thể tải file Excel khuyến nghị. Có thể chưa có dữ liệu phù hợp.");
+      alert(
+        "❌ Không thể tải file Excel khuyến nghị. Có thể chưa có dữ liệu phù hợp."
+      );
       console.error("Download failed:", error);
     }
   };
-  
+
   useEffect(() => {
     const fetchReorderData = async () => {
       try {
@@ -140,7 +150,16 @@ const Reorder = () => {
         } catch (err) {
           console.error("Error fetching top potential saving:", err);
         }
-        
+        const supplierClustersRes = await getSupplierClusters();
+        setSupplierClusters(
+          Array.isArray(supplierClustersRes.data)
+            ? supplierClustersRes.data
+            : supplierClustersRes.data?.data || []
+        );
+        console.log("🐞 Raw supplierClustersRes:", supplierClustersRes.data);
+
+        const bottlenecksRes = await getBottleneckAnalysis();
+        setBottlenecks(bottlenecksRes.data || []);
 
         setLoading(false);
       } catch (err) {
@@ -161,7 +180,11 @@ const Reorder = () => {
 
     fetchReorderData();
   }, [navigate, retryCount]);
-
+  useEffect(() => {
+    console.log("📦 supplierClusters useEffect triggered:", supplierClusters);
+  }, [supplierClusters]);
+  
+  
   // Hàm retry thủ công
   const handleRetry = () => {
     setRetryCount((prev) => prev + 1);
@@ -193,7 +216,7 @@ const Reorder = () => {
     topSafetyStock.length > 0 ||
     topLeadTime.length > 0 ||
     topInventory.length > 0 ||
-    topHoldingCost.length > 0 || 
+    topHoldingCost.length > 0 ||
     topPotentialSaving.length > 0;
   const hasRecommendations =
     optimizationRecommendations && optimizationRecommendations.length > 0;
@@ -216,6 +239,13 @@ const Reorder = () => {
 
       {/* Tabs */}
       <div className="tabs">
+        <button
+          className={`tab ${activeTab === "analysis" ? "active" : ""}`}
+          onClick={() => setActiveTab("analysis")}
+        >
+          Phân tích nhà cung cấp
+        </button>
+
         <button
           className={`tab ${activeTab === "strategy" ? "active" : ""}`}
           onClick={() => setActiveTab("strategy")}
@@ -302,11 +332,14 @@ const Reorder = () => {
               <h2 className="card-title">Khuyến nghị tối ưu hóa tồn kho</h2>
             </div>
             <div className="card-body">
-            <div className="download-section">
-  <button className="download-button" onClick={handleDownloadExcel}>
-    📥 Tải Excel khuyến nghị
-  </button>
-</div>
+              <div className="download-section">
+                <button
+                  className="download-button"
+                  onClick={handleDownloadExcel}
+                >
+                  📥 Tải Excel khuyến nghị
+                </button>
+              </div>
 
               <div className="recommendations-intro">
                 <Info size={20} />
@@ -513,43 +546,146 @@ const Reorder = () => {
               </div>
             </div>
           )}
-{/* Biểu đồ Tiềm năng tiết kiệm chi phí */}
-{topPotentialSaving.length > 0 && (
-  <div className="card">
-    <div className="card-header">
-      <h2 className="card-title">
-        Top 10 danh mục theo Tiềm năng tiết kiệm chi phí
-      </h2>
-    </div>
-    <div className="card-body">
-      <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={topPotentialSaving}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            dataKey="category"
-            tick={{ fontSize: 12 }}
-            interval={0}
-            angle={-45}
-            textAnchor="end"
-            height={100}
-          />
-          <YAxis />
-          <Tooltip formatter={(value) => value.toLocaleString()} />
-          <Legend />
-          <Bar
-            dataKey="value"
-            name="Tiềm năng tiết kiệm"
-            fill="#00bcd4"
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  </div>
-)}
+          {/* Biểu đồ Tiềm năng tiết kiệm chi phí */}
+          {topPotentialSaving.length > 0 && (
+            <div className="card">
+              <div className="card-header">
+                <h2 className="card-title">
+                  Top 10 danh mục theo Tiềm năng tiết kiệm chi phí
+                </h2>
+              </div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={topPotentialSaving}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="category"
+                      tick={{ fontSize: 12 }}
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                    />
+                    <YAxis />
+                    <Tooltip formatter={(value) => value.toLocaleString()} />
+                    <Legend />
+                    <Bar
+                      dataKey="value"
+                      name="Tiềm năng tiết kiệm"
+                      fill="#00bcd4"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
 
           {!hasChartData && (
             <div className="no-data-message">
               <p>Không có dữ liệu biểu đồ phân tích. Vui lòng thử lại sau.</p>
+              <button className="retry-button" onClick={handleRetry}>
+                Thử lại
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      {activeTab === "analysis" && (
+        <div className="charts-container">
+              {console.log("🔥 Tab: analysis rendered")}
+
+          {/* Biểu đồ clustering nhà cung cấp */}
+          {supplierClusters.length > 0 && (
+            <div className="card">
+              <div className="card-header">
+                <h2 className="card-title">
+                  Nhóm nhà cung cấp theo hành vi giao hàng
+                </h2>
+              </div>
+              <div className="card-body">
+              {console.log("✅ Clustering data loaded:", supplierClusters)}
+                <ResponsiveContainer width="100%" height={400}>
+                  <ScatterChart>
+                    <CartesianGrid />
+                    <XAxis
+                      type="number"
+                      dataKey="avg_shipping_days"
+                      name="Thời gian giao hàng trung bình"
+                      unit=" ngày"
+                    />
+                    <YAxis
+                      type="number"
+                      dataKey="avg_freight"
+                      name="Chi phí giao hàng trung bình"
+                      unit=" ₫"
+                    />
+                    <ZAxis
+                      type="number"
+                      dataKey="total_orders"
+                      range={[60, 400]}
+                      name="Tổng đơn"
+                      unit=" đơn"
+                    />
+                    <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+                    <Legend />
+                    <Scatter
+                      name="Cluster 0"
+                      data={supplierClusters.filter((s) => s.cluster === 0)}
+                      fill="#2196f3"
+                    />
+                    <Scatter
+                      name="Cluster 1"
+                      data={supplierClusters.filter((s) => s.cluster === 1)}
+                      fill="#f44336"
+                    />
+                    <Scatter
+                      name="Cluster 2"
+                      data={supplierClusters.filter((s) => s.cluster === 2)}
+                      fill="#4caf50"
+                    />
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Biểu đồ bottlenecks (tỷ lệ giao hàng trễ) */}
+          {bottlenecks.length > 0 && (
+            <div className="card">
+              <div className="card-header">
+                <h2 className="card-title">
+                  Danh mục có tỷ lệ giao hàng trễ cao
+                </h2>
+              </div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={bottlenecks}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="seller_id"
+                      tick={{ fontSize: 12 }}
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                    />
+                    <YAxis unit="%" />
+                    <Tooltip formatter={(value) => `${value}%`} />
+                    <Legend />
+                    <Bar
+                      dataKey="late_ratio"
+                      name="Tỷ lệ trễ (%)"
+                      fill="#e91e63"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {supplierClusters.length === 0 && bottlenecks.length === 0 && (
+            <div className="no-data-message">
+              <p>Không có dữ liệu phân tích nhà cung cấp hoặc bottlenecks.</p>
               <button className="retry-button" onClick={handleRetry}>
                 Thử lại
               </button>

@@ -5,6 +5,7 @@ from services.forecast import forecast_demand, forecast_demand_by_category
 from utils.cache import get_cache, set_cache
 import os
 from utils.cache import get_cache
+from sklearn.cluster import KMeans
 
 def calculate_reorder_strategy():
     cache_key = "reorder_strategy"
@@ -131,3 +132,55 @@ def generate_optimization_recommendations(strategy_data, return_df=False):
     print(f"✅ File khuyến nghị đã được tạo tại: {output_path}")
 
     return df if return_df else output_path
+
+
+
+def cluster_suppliers(n_clusters=3):
+    df = preprocess_data()
+
+    supplier_df = df.groupby("seller_id").agg({
+        "order_id": "nunique",
+        "shipping_duration": "mean",
+        "shipping_charges": "mean"  # ✅ dùng đúng tên cột bạn có
+    }).reset_index()
+
+    supplier_df.columns = ["seller_id", "total_orders", "avg_shipping_days", "avg_freight"]
+
+    # Loại bỏ supplier ít đơn quá (dưới 5)
+    supplier_df = supplier_df[supplier_df["total_orders"] >= 5]
+
+    # Chặn lỗi thiếu dữ liệu
+    features = supplier_df[["total_orders", "avg_shipping_days", "avg_freight"]].fillna(0)
+
+    # Clustering
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+    supplier_df["cluster"] = kmeans.fit_predict(features)
+
+    return supplier_df.to_dict(orient="records")
+
+
+def analyze_bottlenecks(threshold_days=25):
+    df = preprocess_data()
+
+    df["is_late"] = df["shipping_duration"] > threshold_days
+    print("📦 Thống kê shipping_duration:")
+    print(df["shipping_duration"].describe())
+    late_ratio_all = (df["is_late"].mean() * 100)
+    print(f"⚠️ Tỷ lệ đơn hàng bị trễ toàn bộ theo ngưỡng {threshold_days} ngày: {late_ratio_all:.2f}%")
+
+    bottlenecks = df.groupby("seller_id").agg({
+        "order_id": "count",
+        "is_late": "mean",
+        "product_category_name": lambda x: x.mode()[0] if not x.mode().empty else "Unknown"
+    }).reset_index()
+
+    bottlenecks.columns = ["seller_id", "total_orders", "late_ratio", "top_category"]
+
+    # ❗ Chỉ lấy seller có ít nhất 5 đơn
+    bottlenecks = bottlenecks[bottlenecks["total_orders"] >= 5]
+
+    bottlenecks["late_percentage"] = (bottlenecks["late_ratio"] * 100).round(1)
+
+    top_bottlenecks = bottlenecks.sort_values("late_percentage", ascending=False).head(10)
+    return top_bottlenecks.to_dict(orient="records")
+

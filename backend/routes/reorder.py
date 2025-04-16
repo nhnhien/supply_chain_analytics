@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from services.reorder import calculate_reorder_strategy, generate_optimization_recommendations
+from services.reorder import calculate_reorder_strategy, generate_optimization_recommendations, cluster_suppliers, analyze_bottlenecks
 import pandas as pd
 import os
 from flask import send_file
@@ -108,5 +108,23 @@ def download_recommendations():
         else:
             return jsonify({"error": "Không có khuyến nghị để tải"}), 400
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@reorder_bp.route("analysis/clustering", methods=["GET"])
+def get_supplier_clusters():
+    try:
+        result = cluster_suppliers()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@reorder_bp.route("analysis/bottlenecks", methods=["GET"])
+def get_shipping_bottlenecks():
+    try:
+        result = analyze_bottlenecks()
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500

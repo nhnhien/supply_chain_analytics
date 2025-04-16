@@ -115,6 +115,34 @@ export const getTopInventory = () =>
 export const getTopHoldingCost = () =>
   withRetry(withCache(() => api.get("/reorder/charts/top-holding-cost"), "topHoldingCost"))
 
+export const getSupplierClusters = async () => {
+  const res = await withRetry(
+    withCache(() => api.get("/reorder/analysis/clustering"), "supplierClusters")
+  );
+
+  console.log("Raw supplier clusters response:", res.data); // In ra phản hồi gốc để kiểm tra
+
+  // Làm sạch dữ liệu nếu có giá trị NaN hoặc không hợp lệ
+  const cleanedData = res.data.replace(/NaN/g, 'null'); // Thay NaN bằng 'null'
+
+  // Cố gắng phân tích cú pháp chuỗi JSON thành đối tượng
+  let clustersData = [];
+  try {
+    clustersData = JSON.parse(cleanedData); // Parse chuỗi JSON thành đối tượng
+  } catch (error) {
+    console.error("Error parsing supplier clusters data:", error);
+  }
+
+  return {
+    data: Array.isArray(clustersData) ? clustersData : []
+  };
+};
+
+
+
+export const getBottleneckAnalysis = () =>
+  withRetry(withCache(() => api.get("/reorder/analysis/bottlenecks"), "shippingBottlenecks"));
+
 // Hàm để xóa tất cả cache khi cần thiết
 export const clearAllCache = () => {
   const cacheKeys = [
@@ -132,6 +160,8 @@ export const clearAllCache = () => {
     "topInventory",
     "topHoldingCost",
     "topPotentialSaving",
+    "supplierClusters",
+    "shippingBottlenecks",
     "uploadedFiles",
     "dataLoaded",
   ]
@@ -219,6 +249,8 @@ export const preloadAllData = async () => {
       getTopInventory(),
       getTopHoldingCost(),
       getTopPotentialSaving (),
+      getSupplierClusters(),
+      getBottleneckAnalysis(),
     ]
 
     // Chạy tất cả các API calls song song
