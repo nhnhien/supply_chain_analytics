@@ -5,6 +5,7 @@ from utils.cache import get_cache, set_cache
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from utils.currency import brl_to_vnd
 
 # ✅ Tổng quan EDA
 def generate_eda_summary():
@@ -151,7 +152,7 @@ def generate_shipping_cost_by_category_chart():
 
     df = preprocess_data()
     shipping_cost = df.groupby("product_category_name")["shipping_charges"].mean().sort_values(ascending=False).head(10)
-    chart_data = [{"category": k, "cost": round(v, 2)} for k, v in shipping_cost.items()]
+    chart_data = [{"category": k, "cost": brl_to_vnd(round(v, 2))} for k, v in shipping_cost.items()]
 
     fig, ax = plt.subplots(figsize=(8, 4))
     shipping_cost.plot(kind="bar", ax=ax, color="violet")

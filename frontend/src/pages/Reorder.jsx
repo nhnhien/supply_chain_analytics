@@ -32,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import { AlertTriangle, CheckCircle, Info } from "react-feather";
 import "./Reorder.css";
 import { downloadRecommendationExcel } from "../services/api";
+import { formatVND } from "../utils/currency";
 
 const Reorder = () => {
   const [reorderStrategy, setReorderStrategy] = useState([]);
@@ -183,8 +184,7 @@ const Reorder = () => {
   useEffect(() => {
     console.log("📦 supplierClusters useEffect triggered:", supplierClusters);
   }, [supplierClusters]);
-  
-  
+
   // Hàm retry thủ công
   const handleRetry = () => {
     setRetryCount((prev) => prev + 1);
@@ -304,7 +304,7 @@ const Reorder = () => {
                         <td>{item.safety_stock.toLocaleString()}</td>
                         <td>{item.reorder_point.toLocaleString()}</td>
                         <td>{item.optimal_inventory.toLocaleString()}</td>
-                        <td>{item.holding_cost.toLocaleString()}</td>
+                        <td>{formatVND(item.holding_cost)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -393,33 +393,33 @@ const Reorder = () => {
         <div className="charts-container">
           {/* Biểu đồ Reorder Points */}
           {topReorderPoints.length > 0 && (
-            <div className="card">
-              <div className="card-header">
-                <h2 className="card-title">
-                  Top 10 danh mục theo Reorder Point
-                </h2>
-              </div>
-              <div className="card-body">
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={topReorderPoints}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="category"
-                      tick={{ fontSize: 12 }}
-                      interval={0}
-                      angle={-45}
-                      textAnchor="end"
-                      height={100}
-                    />
-                    <YAxis />
-                    <Tooltip formatter={(value) => value.toLocaleString()} />
-                    <Legend />
-                    <Bar dataKey="value" name="Reorder Point" fill="#2196f3" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
+  <div className="card">
+    <div className="card-header">
+      <h2 className="card-title">
+        Top 10 danh mục theo Reorder Point
+      </h2>
+    </div>
+    <div className="card-body">
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={topReorderPoints}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="category"
+            tick={{ fontSize: 12 }}
+            interval={0}
+            angle={-45}
+            textAnchor="end"
+            height={100}
+          />
+          <YAxis tickFormatter={(value) => value.toLocaleString()} />
+          <Tooltip formatter={(value) => value.toLocaleString()} />
+          <Legend />
+          <Bar dataKey="value" name="Reorder Point" fill="#2196f3" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+)}
 
           {/* Biểu đồ Safety Stock */}
           {topSafetyStock.length > 0 && (
@@ -512,74 +512,74 @@ const Reorder = () => {
               </div>
             </div>
           )}
-
-          {/* Biểu đồ Chi phí lưu kho */}
-          {topHoldingCost.length > 0 && (
-            <div className="card">
-              <div className="card-header">
-                <h2 className="card-title">
-                  Top 10 danh mục theo Chi phí lưu kho
-                </h2>
-              </div>
-              <div className="card-body">
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={topHoldingCost}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="category"
-                      tick={{ fontSize: 12 }}
-                      interval={0}
-                      angle={-45}
-                      textAnchor="end"
-                      height={100}
-                    />
-                    <YAxis />
-                    <Tooltip formatter={(value) => value.toLocaleString()} />
-                    <Legend />
-                    <Bar
-                      dataKey="value"
-                      name="Chi phí lưu kho"
-                      fill="#f44336"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-          {/* Biểu đồ Tiềm năng tiết kiệm chi phí */}
-          {topPotentialSaving.length > 0 && (
-            <div className="card">
-              <div className="card-header">
-                <h2 className="card-title">
-                  Top 10 danh mục theo Tiềm năng tiết kiệm chi phí
-                </h2>
-              </div>
-              <div className="card-body">
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={topPotentialSaving}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="category"
-                      tick={{ fontSize: 12 }}
-                      interval={0}
-                      angle={-45}
-                      textAnchor="end"
-                      height={100}
-                    />
-                    <YAxis />
-                    <Tooltip formatter={(value) => value.toLocaleString()} />
-                    <Legend />
-                    <Bar
-                      dataKey="value"
-                      name="Tiềm năng tiết kiệm"
-                      fill="#00bcd4"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-
+{/* Biểu đồ Chi phí lưu kho */}
+{topHoldingCost.length > 0 && (
+  <div className="card">
+    <div className="card-header">
+      <h2 className="card-title">
+        Top 10 danh mục theo Chi phí lưu kho
+      </h2>
+    </div>
+    <div className="card-body">
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={topHoldingCost} margin={{ top: 30, right: 40, bottom: 50, left: 80 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="category"
+            tick={{ fontSize: 12 }}
+            interval={0}
+            angle={-45}
+            textAnchor="end"
+            height={100}
+          />
+          <YAxis
+            tickFormatter={(value) => value.toLocaleString()}
+            width={100}
+          />
+          <Tooltip formatter={(value) => formatVND(value)} />
+          <Legend />
+          <Bar dataKey="value" name="Chi phí lưu kho" fill="#f44336" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+)}
+   {/* Biểu đồ Tiềm năng tiết kiệm chi phí */}
+{topPotentialSaving.length > 0 && (
+  <div className="card">
+    <div className="card-header">
+      <h2 className="card-title">
+        Top 10 danh mục theo Tiềm năng tiết kiệm chi phí
+      </h2>
+    </div>
+    <div className="card-body">
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={topPotentialSaving} margin={{ top: 30, right: 40, bottom: 50, left: 80 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="category"
+            tick={{ fontSize: 12 }}
+            interval={0}
+            angle={-45}
+            textAnchor="end"
+            height={100}
+          />
+          <YAxis
+            tickFormatter={(value) => value.toLocaleString()}
+            width={100}
+          />
+          <Tooltip formatter={(value) => formatVND(value)} />
+          <Legend />
+          <Bar
+            dataKey="value"
+            name="Tiềm năng tiết kiệm"
+            fill="#00bcd4"
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+)}
           {!hasChartData && (
             <div className="no-data-message">
               <p>Không có dữ liệu biểu đồ phân tích. Vui lòng thử lại sau.</p>
@@ -592,7 +592,7 @@ const Reorder = () => {
       )}
       {activeTab === "analysis" && (
         <div className="charts-container">
-              {console.log("🔥 Tab: analysis rendered")}
+          {console.log("🔥 Tab: analysis rendered")}
 
           {/* Biểu đồ clustering nhà cung cấp */}
           {supplierClusters.length > 0 && (
@@ -603,7 +603,7 @@ const Reorder = () => {
                 </h2>
               </div>
               <div className="card-body">
-              {console.log("✅ Clustering data loaded:", supplierClusters)}
+                {console.log("✅ Clustering data loaded:", supplierClusters)}
                 <ResponsiveContainer width="100%" height={400}>
                   <ScatterChart>
                     <CartesianGrid />
@@ -617,7 +617,8 @@ const Reorder = () => {
                       type="number"
                       dataKey="avg_freight"
                       name="Chi phí giao hàng trung bình"
-                      unit=" ₫"
+                      // unit=" ₫"
+                      tickFormatter={(value) => `${value / 1000}k`}
                     />
                     <ZAxis
                       type="number"
@@ -626,7 +627,14 @@ const Reorder = () => {
                       name="Tổng đơn"
                       unit=" đơn"
                     />
-                    <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+                    <Tooltip
+                      formatter={(value, name) => {
+                        if (name === "Chi phí giao hàng trung bình") {
+                          return [formatVND(value), name];
+                        }
+                        return [value, name];
+                      }}
+                    />
                     <Legend />
                     <Scatter
                       name="Cluster 0"

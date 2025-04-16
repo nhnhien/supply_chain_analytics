@@ -28,6 +28,7 @@ import LoadingSpinner from "../components/LoadingSpinner"
 import ErrorMessage from "../components/ErrorMessage"
 import { useNavigate } from "react-router-dom"
 import "./Analysis.css"
+import { formatVND } from "../utils/currency"
 
 const Analysis = () => {
   const [monthlyOrders, setMonthlyOrders] = useState([])
@@ -269,33 +270,37 @@ const Analysis = () => {
         )}
       </div>
 
-      {/* Biểu đồ chi phí vận chuyển theo danh mục */}
-      {shippingCost.length > 0 && (
-        <div className="card">
-          <div className="card-header">
-            <h2 className="card-title">Chi phí vận chuyển theo danh mục</h2>
-          </div>
-          <div className="card-body">
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={shippingCost}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="category"
-                  tick={{ fontSize: 12 }}
-                  interval={0}
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                />
-                <YAxis />
-                <Tooltip formatter={(value) => value.toLocaleString()} />
-                <Legend />
-                <Bar dataKey="cost" name="Chi phí vận chuyển" fill="#9c27b0" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
+   {/* Biểu đồ chi phí vận chuyển theo danh mục */}
+{shippingCost.length > 0 && (
+  <div className="card">
+    <div className="card-header">
+      <h2 className="card-title">Chi phí vận chuyển theo danh mục</h2>
+    </div>
+    <div className="card-body">
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={shippingCost}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="category"
+            tick={{ fontSize: 12 }}
+            interval={0}
+            angle={-45}
+            textAnchor="end"
+            height={100}
+          />
+          <YAxis 
+            tickFormatter={(value) => value.toLocaleString()} 
+            width={100}
+          />
+          <Tooltip formatter={(value) => formatVND(value)} />
+          <Legend />
+          <Bar dataKey="cost" name="Chi phí vận chuyển" fill="#9c27b0" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+)}
+
     </div>
   )
 }

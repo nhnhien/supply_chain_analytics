@@ -3,6 +3,7 @@ import numpy as np
 from services.preprocess import preprocess_data
 from services.forecast import forecast_demand, forecast_demand_by_category
 from utils.cache import get_cache, set_cache
+from utils.currency import brl_to_vnd, format_vnd
 import os
 from utils.cache import get_cache
 from sklearn.cluster import KMeans
@@ -33,7 +34,8 @@ def calculate_reorder_strategy():
     forecast_map = {f["category"]: f for f in cached_forecasts if f["status"] == "success"}
 
     z_score = 1.65
-    holding_cost_per_unit_per_month = 2
+    # Chuyển đổi giá trị từ BRL sang VND
+    holding_cost_per_unit_per_month = brl_to_vnd(2)  # Giả sử chi phí 2 BRL/đơn vị/tháng
     strategy = []
 
     for category in categories:
@@ -67,7 +69,7 @@ def calculate_reorder_strategy():
                 "optimal_inventory": optimal_inventory,
                 "holding_cost": holding_cost
             })
-            print(f"✅ {category} | Holding cost = {holding_cost}")
+            print(f"✅ {category} | Holding cost = {format_vnd(holding_cost)}")
 
         except Exception as e:
             print(f"⚠️ Lỗi khi xử lý {category}: {str(e)}")
@@ -95,7 +97,7 @@ def generate_optimization_recommendations(strategy_data, return_df=False):
         safety_stock = row["safety_stock"]
         reorder_point = row["reorder_point"]
         avg_lead_time_days = row.get("avg_lead_time_days", 30)
-        holding_cost_per_unit = row.get("holding_cost_per_unit", 5)
+        holding_cost_per_unit = row.get("holding_cost_per_unit", brl_to_vnd(5))
 
         if holding_cost > 100_000:
             new_safety_stock = int(safety_stock * 0.8)
@@ -134,7 +136,6 @@ def generate_optimization_recommendations(strategy_data, return_df=False):
     return df if return_df else output_path
 
 
-
 def cluster_suppliers(n_clusters=3):
     df = preprocess_data()
 
@@ -145,7 +146,8 @@ def cluster_suppliers(n_clusters=3):
     }).reset_index()
 
     supplier_df.columns = ["seller_id", "total_orders", "avg_shipping_days", "avg_freight"]
-
+    
+    supplier_df["avg_freight"] = supplier_df["avg_freight"].apply(brl_to_vnd)
     # Loại bỏ supplier ít đơn quá (dưới 5)
     supplier_df = supplier_df[supplier_df["total_orders"] >= 5]
 
@@ -183,4 +185,3 @@ def analyze_bottlenecks(threshold_days=25):
 
     top_bottlenecks = bottlenecks.sort_values("late_percentage", ascending=False).head(10)
     return top_bottlenecks.to_dict(orient="records")
-

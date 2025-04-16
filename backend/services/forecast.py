@@ -7,6 +7,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import numpy as np
 from utils.cache import get_cache, set_cache
+from utils.currency import brl_to_vnd
 import traceback
 import warnings
 import xgboost as xgb
@@ -244,7 +245,9 @@ def forecast_demand_by_category(category_name, periods=6):
 
         # ✅ Tính thêm inventory & holding cost
         optimal_inventory = int(np.max(forecast_xgb)) if forecast_xgb else 0
-        holding_cost = optimal_inventory * 5  # 💰 Ví dụ giả định chi phí giữ kho 5 VND/đơn vị
+        # Chuyển đổi từ BRL sang VND (giả sử chi phí giữ kho 5 BRL/đơn vị)
+        unit_holding_cost = brl_to_vnd(5)
+        holding_cost = optimal_inventory * unit_holding_cost
 
         return {
             "status": "success",
