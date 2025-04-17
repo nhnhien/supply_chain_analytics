@@ -14,6 +14,7 @@ import xgboost as xgb
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tools.sm_exceptions import ValueWarning
+from services.mongodb import save_forecast_result  
 
 # ⚠️ Suppress known warnings
 warnings.filterwarnings("ignore", message=".*Non-stationary starting autoregressive parameters.*")
@@ -124,6 +125,16 @@ def forecast_demand(periods=6):
         charts_dir = os.path.join(os.path.dirname(__file__), "../charts/forecast")
         os.makedirs(charts_dir, exist_ok=True)
         fig.savefig(os.path.join(charts_dir, "forecast_chart.png"), bbox_inches="tight")
+
+        save_forecast_result({
+            "category": "Tổng thể",
+            "model": "XGBoost + ARIMA",
+            "forecast_table": forecast_df.to_dict(orient="records"),
+            "mae_rmse_comparison": {
+                "xgboost": {"mae": round(mae_xgb, 2), "rmse": round(rmse_xgb, 2)},
+                "arima": {"mae": round(mae_arima, 2), "rmse": round(rmse_arima, 2)}
+            }
+        })
 
         return {
             "status": "success",
@@ -248,6 +259,18 @@ def forecast_demand_by_category(category_name, periods=6):
         # Chuyển đổi từ BRL sang VND (giả sử chi phí giữ kho 5 BRL/đơn vị)
         unit_holding_cost = brl_to_vnd(5)
         holding_cost = optimal_inventory * unit_holding_cost
+        
+        save_forecast_result({
+            "category": category_name,
+            "model": "XGBoost + ARIMA",
+            "forecast_table": forecast_df.to_dict(orient="records"),
+            "optimal_inventory": optimal_inventory,
+            "holding_cost": holding_cost,
+            "mae_rmse_comparison": {
+                "xgboost": {"mae": round(mae_xgb, 2), "rmse": round(rmse_xgb, 2)},
+                "arima": {"mae": round(mae_arima, 2), "rmse": round(rmse_arima, 2)}
+            }
+        })
 
         return {
             "status": "success",

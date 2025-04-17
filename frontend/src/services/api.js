@@ -31,32 +31,52 @@ const withRetry = async (apiCall, maxRetries = 5, delay = 2000) => {
 // Thêm caching cho các API calls
 const withCache = (apiCall, cacheKey, expireTime = 3600000) => {
   return async () => {
-    // Kiểm tra xem có dữ liệu trong cache không
-    const cachedData = localStorage.getItem(cacheKey)
+    const cachedData = localStorage.getItem(cacheKey);
     if (cachedData) {
-      const { data, timestamp } = JSON.parse(cachedData)
-      // Kiểm tra xem cache có hết hạn chưa
-      if (Date.now() - timestamp < expireTime) {
-        console.log(`Using cached data for ${cacheKey}`)
-        return { data }
+      const { data, timestamp } = JSON.parse(cachedData);
+    
+      const isCachedEmptyArray = Array.isArray(data) && data.length === 0;
+      const isCachedEmptyNestedArray =
+        typeof data === "object" &&
+        Array.isArray(data?.data) &&
+        data?.data.length === 0;
+    
+      if (!isCachedEmptyArray && !isCachedEmptyNestedArray && Date.now() - timestamp < expireTime) {
+        console.log(`✅ Using cached data for ${cacheKey}`);
+        return { data };
       }
+    
+      console.warn(`⚠️ Bỏ qua cache rỗng hoặc hết hạn cho ${cacheKey}`);
+    }
+    
+    const response = await apiCall();
+
+    // ❗ Nếu dữ liệu rỗng → không cache
+    const isEmptyArray = Array.isArray(response?.data) && response.data.length === 0;
+    const isEmptyNestedArray =
+      typeof response?.data === "object" &&
+      Array.isArray(response.data.data) &&
+      response.data.data.length === 0;
+
+    if (!response?.data || isEmptyArray || isEmptyNestedArray) {
+      console.warn(`⚠️ Không cache dữ liệu rỗng cho ${cacheKey}`);
+      return response;
     }
 
-    // Nếu không có cache hoặc cache đã hết hạn, gọi API
-    const response = await apiCall()
-
-    // Lưu kết quả vào cache
     localStorage.setItem(
       cacheKey,
       JSON.stringify({
         data: response.data,
         timestamp: Date.now(),
-      }),
-    )
+      })
+    );
 
-    return response
-  }
-}
+    console.log(`🧠 Cached data for ${cacheKey}`);
+    return response;
+  };
+};
+
+
 
 // API cho phân tích dữ liệu với retry và cache
 export const getAnalysisSummary = () => withRetry(withCache(() => api.get("/analyze/summary"), "analysisSummary"))
@@ -75,25 +95,40 @@ export const getShippingCostCategoryChart = () =>
 export const getDemandForecast = () => {
   const cacheKey = "demandForecast";
   const expireTime = 60 * 60 * 1000; // 1 giờ
+  // Thêm version để kiểm soát cache
+  const cacheVersion = "v1.1"; 
 
   return withRetry(async () => {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
-      const { data, timestamp } = JSON.parse(cached);
-      if (Date.now() - timestamp < expireTime) {
+      const cachedData = JSON.parse(cached);
+      // Kiểm tra phiên bản và thời gian
+      if (
+        cachedData.version === cacheVersion && 
+        Date.now() - cachedData.timestamp < expireTime &&
+        Array.isArray(cachedData.data) && 
+        cachedData.data.length > 1 // Đảm bảo có nhiều hơn chỉ "Tổng thể"
+      ) {
         console.log("✅ Using cached forecast data");
-        return { data: Array.isArray(data) ? data : [data] };
+        return { data: cachedData.data };
       }
+      console.log("⚠️ Cache không hợp lệ hoặc đã hết hạn");
     }
 
+    // Thêm timestamp vào request để tránh cache của trình duyệt
     const response = await api.get(`/forecast/demand/all?t=${Date.now()}`);
     const forecastData = response.data;
+
+    if (!Array.isArray(forecastData) || forecastData.length <= 1) {
+      console.warn("⚠️ Dữ liệu forecast không đầy đủ, có thể cần kiểm tra backend");
+    }
 
     localStorage.setItem(
       cacheKey,
       JSON.stringify({
         data: forecastData,
         timestamp: Date.now(),
+        version: cacheVersion
       })
     );
 
@@ -116,33 +151,81 @@ export const getTopHoldingCost = () =>
   withRetry(withCache(() => api.get("/reorder/charts/top-holding-cost"), "topHoldingCost"))
 
 export const getSupplierClusters = async () => {
-  const res = await withRetry(
-    withCache(() => api.get("/reorder/analysis/clustering"), "supplierClusters")
-  );
-
-  console.log("Raw supplier clusters response:", res.data); // In ra phản hồi gốc để kiểm tra
-
-  // Làm sạch dữ liệu nếu có giá trị NaN hoặc không hợp lệ
-  const cleanedData = res.data.replace(/NaN/g, 'null'); // Thay NaN bằng 'null'
-
-  // Cố gắng phân tích cú pháp chuỗi JSON thành đối tượng
-  let clustersData = [];
   try {
-    clustersData = JSON.parse(cleanedData); // Parse chuỗi JSON thành đối tượng
-  } catch (error) {
-    console.error("Error parsing supplier clusters data:", error);
-  }
+    const res = await withRetry(
+      withCache(() => api.get("/reorder/analysis/clustering"), "supplierClusters")
+    );
 
-  return {
-    data: Array.isArray(clustersData) ? clustersData : []
-  };
+    console.log("Raw supplier clusters response:", res.data); // Kiểm tra log
+
+    // Đảm bảo luôn trả về array, kiểm tra cả data.data và data trực tiếp
+    let result = [];
+    if (Array.isArray(res.data)) {
+      result = res.data;
+    } else if (res.data && Array.isArray(res.data.data)) {
+      result = res.data.data;
+    }
+
+    // Đảm bảo các trường cần thiết tồn tại trên mỗi phần tử
+    const processedData = result.map(item => {
+      return {
+        seller_id: item.seller_id || `unknown-${Math.random()}`,
+        total_orders: item.total_orders || 0,
+        avg_shipping_days: item.avg_shipping_days || 0,
+        avg_freight: item.avg_freight || 0,
+        cluster: typeof item.cluster === 'number' ? item.cluster : 0,
+        cluster_description: item.cluster_description || 'Không xác định'
+      };
+    });
+
+    return {
+      data: processedData
+    };
+  } catch (error) {
+    console.error("Error in getSupplierClusters:", error);
+    return { data: [] };
+  }
 };
 
 
 
-export const getBottleneckAnalysis = () =>
-  withRetry(withCache(() => api.get("/reorder/analysis/bottlenecks"), "shippingBottlenecks"));
 
+export const getBottleneckAnalysis = async () => {
+  try {
+    const res = await withRetry(
+      withCache(() => api.get("/reorder/analysis/bottlenecks"), "shippingBottlenecks")
+    );
+
+    console.log("Raw bottlenecks response:", res.data); // Kiểm tra log
+
+    // Đảm bảo luôn trả về array
+    let result = [];
+    if (Array.isArray(res.data)) {
+      result = res.data;
+    } else if (res.data && Array.isArray(res.data.data)) {
+      result = res.data.data;
+    }
+
+    // Đảm bảo các trường cần thiết tồn tại trên mỗi phần tử
+    const processedData = result.map(item => {
+      return {
+        seller_id: item.seller_id || `unknown-${Math.random()}`,
+        total_orders: item.total_orders || 0,
+        late_ratio: item.late_ratio || 0,
+        late_percentage: item.late_percentage || (item.late_ratio ? item.late_ratio * 100 : 0),
+        top_category: item.top_category || 'Unknown',
+        severity: item.severity || 'Không xác định'
+      };
+    });
+
+    return {
+      data: processedData
+    };
+  } catch (error) {
+    console.error("Error in getBottleneckAnalysis:", error);
+    return { data: [] };
+  }
+};
 // Hàm để xóa tất cả cache khi cần thiết
 export const clearAllCache = () => {
   const cacheKeys = [
@@ -174,7 +257,7 @@ export const uploadFile = (file) => {
   const formData = new FormData()
   formData.append("file", file)
 
-  return api.post("/upload", formData, {
+  return api.post("/upload/", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },

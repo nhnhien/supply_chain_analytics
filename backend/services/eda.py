@@ -6,6 +6,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from utils.currency import brl_to_vnd
+from services.mongodb import save_eda_summary
 
 # ✅ Tổng quan EDA
 def generate_eda_summary():
@@ -33,6 +34,8 @@ def generate_eda_summary():
 
     shipping_cost = df.groupby("product_category_name")["shipping_charges"].mean().sort_values(ascending=False).head(10)
     result["avg_shipping_cost_by_category"] = shipping_cost.to_dict()
+
+    save_eda_summary(dict(result))
 
     set_cache(cache_key, result, ttl_seconds=3600)
     return result

@@ -112,19 +112,38 @@ def download_recommendations():
         return jsonify({"error": str(e)}), 500
 
 
-@reorder_bp.route("analysis/clustering", methods=["GET"])
+@reorder_bp.route("/analysis/clustering", methods=["GET"])
 def get_supplier_clusters():
     try:
-        result = cluster_suppliers()
+        from services.mongodb import db
+        # Truy vấn dữ liệu từ MongoDB
+        result = list(db["supplier_clusters"].find({}, {"_id": 0}))  # ✅ Ẩn _id
+        
+        # Nếu không có dữ liệu trong MongoDB, thực hiện phân tích và lưu kết quả
+        if not result:
+            print("⚠️ Không có dữ liệu supplier_clusters trong DB, sẽ chạy phân tích mới...")
+            result = cluster_suppliers()
+            
         return jsonify(result)
     except Exception as e:
+        print(f"❌ Lỗi trong get_supplier_clusters: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
-@reorder_bp.route("analysis/bottlenecks", methods=["GET"])
+
+@reorder_bp.route("/analysis/bottlenecks", methods=["GET"])
 def get_shipping_bottlenecks():
     try:
-        result = analyze_bottlenecks()
+        from services.mongodb import db
+        # Truy vấn dữ liệu từ MongoDB
+        result = list(db["shipping_bottlenecks"].find({}, {"_id": 0}))  # ✅ Ẩn _id
+        
+        # Nếu không có dữ liệu trong MongoDB, thực hiện phân tích và lưu kết quả
+        if not result:
+            print("⚠️ Không có dữ liệu shipping_bottlenecks trong DB, sẽ chạy phân tích mới...")
+            result = analyze_bottlenecks()
+            
         return jsonify(result)
     except Exception as e:
+        print(f"❌ Lỗi trong get_shipping_bottlenecks: {str(e)}")
         return jsonify({"error": str(e)}), 500
