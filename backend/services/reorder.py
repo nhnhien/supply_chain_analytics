@@ -1,11 +1,10 @@
 import pandas as pd
 import numpy as np
-from services.preprocess import preprocess_data
+from services.preprocess import preprocess_data, is_large_dataset
 from services.forecast import forecast_demand, forecast_demand_by_category
 from utils.cache import get_cache, set_cache
 from utils.currency import brl_to_vnd, format_vnd
 import os
-from utils.cache import get_cache
 from sklearn.cluster import KMeans
 from services.mongodb import (
     save_reorder_strategy,
@@ -20,6 +19,14 @@ def calculate_reorder_strategy():
     if cached:
         return cached
 
+    # Kiểm tra xem có dùng Spark hay không
+    use_spark = is_large_dataset()
+    if use_spark:
+        print("📊 Sử dụng Spark để tính toán chiến lược reorder (dữ liệu lớn)")
+        from services.spark_analytics import calculate_reorder_strategy_spark
+        return calculate_reorder_strategy_spark()
+    
+    # Nếu không dùng Spark, tiếp tục với code hiện tại
     df = preprocess_data()
     categories = df["product_category_name"].dropna().unique()
 
@@ -157,6 +164,20 @@ def cluster_suppliers(n_clusters=3):
         if cached:
             return cached
 
+        # Kiểm tra xem có nên dùng Spark hay không
+        use_spark = is_large_dataset()
+        if use_spark:
+            print("📊 Sử dụng Spark để phân cụm nhà cung cấp (dữ liệu lớn)")
+            from services.spark_analytics import cluster_suppliers_spark
+            clusters = cluster_suppliers_spark(n_clusters)
+            
+            # Cache và lưu kết quả
+            set_cache(cache_key, clusters, ttl_seconds=3600*24)
+            save_supplier_clusters(clusters)
+            
+            return clusters
+
+        # Nếu không dùng Spark, tiếp tục với code hiện tại
         df = preprocess_data()
 
         supplier_df = df.groupby("seller_id").agg({
@@ -243,6 +264,20 @@ def analyze_bottlenecks(threshold_days=20):
         if cached:
             return cached
 
+        # Kiểm tra xem có nên dùng Spark hay không
+        use_spark = is_large_dataset()
+        if use_spark:
+            print("📊 Sử dụng Spark để phân tích bottlenecks (dữ liệu lớn)")
+            from services.spark_analytics import analyze_bottlenecks_spark
+            bottlenecks = analyze_bottlenecks_spark(threshold_days)
+            
+            # Cache và lưu kết quả
+            set_cache(cache_key, bottlenecks, ttl_seconds=3600*24)
+            save_bottleneck_analysis(bottlenecks)
+            
+            return bottlenecks
+
+        # Nếu không dùng Spark, tiếp tục với code hiện tại
         df = preprocess_data()
 
         # Xác định đơn hàng nào bị trễ dựa trên ngưỡng

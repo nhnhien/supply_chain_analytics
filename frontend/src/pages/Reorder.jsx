@@ -396,7 +396,7 @@ const Reorder = () => {
   <div className="card">
     <div className="card-header">
       <h2 className="card-title">
-        Top 10 danh mục theo Reorder Point
+        Top 15 danh mục theo Reorder Point
       </h2>
     </div>
     <div className="card-body">
@@ -426,7 +426,7 @@ const Reorder = () => {
             <div className="card">
               <div className="card-header">
                 <h2 className="card-title">
-                  Top 10 danh mục theo Safety Stock
+                  Top 15 danh mục theo Safety Stock
                 </h2>
               </div>
               <div className="card-body">
@@ -455,7 +455,7 @@ const Reorder = () => {
           {topLeadTime.length > 0 && (
             <div className="card">
               <div className="card-header">
-                <h2 className="card-title">Top 10 danh mục theo Lead Time</h2>
+                <h2 className="card-title">Top 15 danh mục theo Lead Time</h2>
               </div>
               <div className="card-body">
                 <ResponsiveContainer width="100%" height={400}>
@@ -488,7 +488,7 @@ const Reorder = () => {
             <div className="card">
               <div className="card-header">
                 <h2 className="card-title">
-                  Top 10 danh mục theo Tồn kho tối ưu
+                  Top 15 danh mục theo Tồn kho tối ưu
                 </h2>
               </div>
               <div className="card-body">
@@ -517,7 +517,7 @@ const Reorder = () => {
   <div className="card">
     <div className="card-header">
       <h2 className="card-title">
-        Top 10 danh mục theo Chi phí lưu kho
+        Top 15 danh mục theo Chi phí lưu kho
       </h2>
     </div>
     <div className="card-body">
@@ -549,7 +549,7 @@ const Reorder = () => {
   <div className="card">
     <div className="card-header">
       <h2 className="card-title">
-        Top 10 danh mục theo Tiềm năng tiết kiệm chi phí
+        Top 15 danh mục theo Tiềm năng tiết kiệm chi phí
       </h2>
     </div>
     <div className="card-body">

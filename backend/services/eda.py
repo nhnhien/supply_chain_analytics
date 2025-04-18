@@ -21,7 +21,7 @@ def generate_eda_summary():
     orders_by_month = df.groupby("order_month").size().sort_index()
     result["orders_by_month"] = orders_by_month.to_dict()
 
-    top_categories = df["product_category_name"].value_counts().head(10)
+    top_categories = df["product_category_name"].value_counts().head(15)
     result["top_categories"] = top_categories.to_dict()
 
     delay_counts = df["delivery_delay"].dropna().apply(lambda x: x > 0).value_counts()
@@ -32,7 +32,7 @@ def generate_eda_summary():
     seller_duration = df.groupby("seller_id")["shipping_duration"].mean().sort_values().head(10)
     result["avg_shipping_duration_by_seller"] = seller_duration.to_dict()
 
-    shipping_cost = df.groupby("product_category_name")["shipping_charges"].mean().sort_values(ascending=False).head(10)
+    shipping_cost = df.groupby("product_category_name")["shipping_charges"].mean().sort_values(ascending=False).head(15)
     result["avg_shipping_cost_by_category"] = shipping_cost.to_dict()
 
     save_eda_summary(dict(result))
@@ -76,12 +76,12 @@ def generate_top_categories_chart():
         return cached
 
     df = preprocess_data()
-    top_categories = df["product_category_name"].value_counts().head(10)
+    top_categories = df["product_category_name"].value_counts().head(15)
     chart_data = [{"category": k, "value": int(v)} for k, v in top_categories.items()]
 
     fig, ax = plt.subplots(figsize=(8, 4))
     top_categories.plot(kind="bar", ax=ax, color="skyblue")
-    ax.set_title("Top 10 danh mục sản phẩm phổ biến")
+    ax.set_title("Top 15 danh mục sản phẩm theo số lượng đơn hàng")
     ax.set_ylabel("Số lượng sản phẩm")
     ax.set_xlabel("Danh mục")
     ax.tick_params(axis='x', rotation=45)
@@ -128,14 +128,14 @@ def generate_shipping_duration_by_seller_chart():
         return cached
 
     df = preprocess_data()
-    top_sellers = df["seller_id"].value_counts().head(10).index
+    top_sellers = df["seller_id"].value_counts().head(15).index
     seller_duration = df[df["seller_id"].isin(top_sellers)].groupby("seller_id")["shipping_duration"].mean().sort_values()
     chart_data = [{"seller": str(k), "duration": round(v, 2)} for k, v in seller_duration.items()]
 
     fig, ax = plt.subplots(figsize=(8, 4))
     seller_duration.plot(kind="barh", ax=ax, color="orange")
     ax.set_xlabel("Thời gian giao hàng (ngày)")
-    ax.set_title("Thời gian giao hàng trung bình (Top 10 seller)")
+    ax.set_title("Thời gian giao hàng trung bình (Top 15 seller)")
 
     result = {
         "chart": fig_to_base64(fig),
@@ -154,13 +154,13 @@ def generate_shipping_cost_by_category_chart():
         return cached
 
     df = preprocess_data()
-    shipping_cost = df.groupby("product_category_name")["shipping_charges"].mean().sort_values(ascending=False).head(10)
+    shipping_cost = df.groupby("product_category_name")["shipping_charges"].mean().sort_values(ascending=False).head(15)
     chart_data = [{"category": k, "cost": brl_to_vnd(round(v, 2))} for k, v in shipping_cost.items()]
 
     fig, ax = plt.subplots(figsize=(8, 4))
     shipping_cost.plot(kind="bar", ax=ax, color="violet")
     ax.set_ylabel("Chi phí vận chuyển (VND)")
-    ax.set_title("Chi phí vận chuyển trung bình theo danh mục")
+    ax.set_title("Top 15 danh mục có chi phí vận chuyển cao nhất")
     ax.tick_params(axis='x', rotation=45)
 
     result = {

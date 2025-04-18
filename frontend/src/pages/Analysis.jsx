@@ -68,6 +68,7 @@ const Analysis = () => {
         try {
           const topCategoriesRes = await getTopCategoriesChart()
           setTopCategories(topCategoriesRes.data.data)
+          console.log(`Số danh mục nhận được: ${topCategoriesRes.data.data.length}`)
         } catch (err) {
           console.error("Error fetching top categories:", err)
         }
@@ -154,6 +155,15 @@ const Analysis = () => {
     )
   }
 
+  // Truncate long seller IDs to make them more readable
+  const processedSellerShipping = sellerShipping.map(item => ({
+    ...item,
+    // Truncate the seller ID if too long (keeping first and last 3 characters)
+    displaySeller: item.seller.length > 8 ? 
+      `${item.seller.substring(0, 3)}...${item.seller.substring(item.seller.length - 3)}` : 
+      item.seller
+  }));
+
   return (
     <div className="analysis">
       <h1 className="page-title">Phân tích dữ liệu</h1>
@@ -166,10 +176,20 @@ const Analysis = () => {
           </div>
           <div className="card-body">
             <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={monthlyOrders}>
+              <LineChart 
+                data={monthlyOrders}
+                margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <XAxis 
+                  dataKey="month" 
+                  height={60}
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  width={80}
+                  tickFormatter={(value) => value.toLocaleString()}
+                />
                 <Tooltip formatter={(value) => value.toLocaleString()} />
                 <Legend />
                 <Line
@@ -190,22 +210,28 @@ const Analysis = () => {
       {/* Biểu đồ top danh mục */}
       {topCategories.length > 0 && (
         <div className="card">
-          <div className="card-header">
-            <h2 className="card-title">Top 10 danh mục sản phẩm</h2>
-          </div>
+<div className="card-header">
+  <h2 className="card-title">Top danh mục sản phẩm theo số lượng đơn hàng</h2>
+</div>
+
           <div className="card-body">
             <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={topCategories}>
+              <BarChart 
+                data={topCategories}
+                margin={{ top: 20, right: 30, left: 20, bottom: 120 }} // Tăng margin bottom cho labels
+                layout="vertical" // Đổi sang dạng ngang để dễ hiển thị nhãn
+              >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="category"
-                  tick={{ fontSize: 12 }}
-                  interval={0}
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
+                <XAxis 
+                  type="number"
+                  tickFormatter={(value) => value.toLocaleString()}
                 />
-                <YAxis />
+                <YAxis 
+                  dataKey="category" 
+                  type="category"
+                  width={160} // Tăng chiều rộng của trục Y
+                  tick={{ fontSize: 12 }}
+                />
                 <Tooltip formatter={(value) => value.toLocaleString()} />
                 <Legend />
                 <Bar dataKey="value" name="Số lượng" fill="#2196f3" />
@@ -224,7 +250,9 @@ const Analysis = () => {
             </div>
             <div className="card-body">
               <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
+                <PieChart
+                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                >
                   <Pie
                     data={deliveryDelay}
                     cx="50%"
@@ -256,11 +284,32 @@ const Analysis = () => {
             </div>
             <div className="card-body">
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={sellerShipping} layout="vertical">
+                <BarChart 
+                  data={processedSellerShipping} 
+                  layout="vertical"
+                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" />
-                  <YAxis dataKey="seller" type="category" width={80} />
-                  <Tooltip />
+                  <YAxis 
+                    dataKey="displaySeller" 
+                    type="category" 
+                    width={100} // Tăng chiều rộng để hiển thị ID 
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip 
+                    formatter={(value, name, props) => [
+                      `${value.toFixed(1)} ngày`, 
+                      "Thời gian giao hàng"
+                    ]}
+                    labelFormatter={(label, payload) => {
+                      if (payload && payload.length > 0) {
+                        // Lấy ID đầy đủ từ dữ liệu gốc
+                        return `Seller ID: ${payload[0].payload.seller}`;
+                      }
+                      return label;
+                    }}
+                  />
                   <Legend />
                   <Bar dataKey="duration" name="Thời gian (ngày)" fill="#ff9800" />
                 </BarChart>
@@ -270,37 +319,38 @@ const Analysis = () => {
         )}
       </div>
 
-   {/* Biểu đồ chi phí vận chuyển theo danh mục */}
-{shippingCost.length > 0 && (
-  <div className="card">
-    <div className="card-header">
-      <h2 className="card-title">Chi phí vận chuyển theo danh mục</h2>
-    </div>
-    <div className="card-body">
-      <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={shippingCost}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            dataKey="category"
-            tick={{ fontSize: 12 }}
-            interval={0}
-            angle={-45}
-            textAnchor="end"
-            height={100}
-          />
-          <YAxis 
-            tickFormatter={(value) => value.toLocaleString()} 
-            width={100}
-          />
-          <Tooltip formatter={(value) => formatVND(value)} />
-          <Legend />
-          <Bar dataKey="cost" name="Chi phí vận chuyển" fill="#9c27b0" />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  </div>
-)}
-
+      {/* Biểu đồ chi phí vận chuyển theo danh mục */}
+      {shippingCost.length > 0 && (
+        <div className="card">
+<div className="card-header">
+  <h2 className="card-title">Top danh mục có chi phí vận chuyển cao nhất</h2>
+</div>
+          <div className="card-body">
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart 
+                data={shippingCost}
+                margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
+                layout="vertical" // Đổi sang dạng ngang 
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  type="number"
+                  tickFormatter={(value) => value.toLocaleString()}
+                />
+                <YAxis 
+                  dataKey="category" 
+                  type="category"
+                  width={160} // Tăng chiều rộng của trục Y 
+                  tick={{ fontSize: 12 }}
+                />
+                <Tooltip formatter={(value) => formatVND(value)} />
+                <Legend />
+                <Bar dataKey="cost" name="Chi phí vận chuyển" fill="#9c27b0" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
