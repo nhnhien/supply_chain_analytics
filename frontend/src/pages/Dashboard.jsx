@@ -65,7 +65,7 @@ const Dashboard = () => {
         setLoading(false)
       } catch (err) {
         console.error("Error fetching dashboard data:", err)
-        setError("Không thể tải dữ liệu dashboard. Vui lòng thử lại sau.")
+        setError("Failed to load dashboard data. Please try again later.")
         setLoading(false)
 
         // Auto-retry up to 3 times
@@ -90,7 +90,7 @@ const Dashboard = () => {
 
   if (loading)
     return (
-      <LoadingSpinner message="Đang tải dữ liệu dashboard. Quá trình này có thể mất vài phút nếu dữ liệu vừa được tải lên." />
+      <LoadingSpinner message="Loading dashboard data. This may take a few minutes if new data was recently uploaded." />
     )
 
   if (error)
@@ -98,10 +98,10 @@ const Dashboard = () => {
       <div className="error-with-retry">
         <ErrorMessage message={error} />
         <button className="retry-button" onClick={handleRetry}>
-          Thử lại
+        Retry
         </button>
         <p className="retry-note">
-          Lưu ý: Sau khi tải lên dữ liệu mới, hệ thống cần thời gian để xử lý và tính toán các phân tích.
+        Note: After uploading new data, the system needs time to process and compute the analysis.
         </p>
       </div>
     )
@@ -142,13 +142,13 @@ const Dashboard = () => {
         <h1 className="page-title">Supply Chain Analytics Dashboard</h1>
         <div className="dashboard-actions">
           <button onClick={() => navigateTo('/analysis')} className="action-button">
-            Chi tiết phân tích
+          View Analysis
           </button>
           <button onClick={() => navigateTo('/forecast')} className="action-button primary">
-            Dự báo nhu cầu
+          Demand Forecast
           </button>
           <button onClick={() => navigateTo('/reorder')} className="action-button">
-            Chiến lược tồn kho
+          Inventory Strategy
           </button>
         </div>
       </div>
@@ -158,10 +158,10 @@ const Dashboard = () => {
         <div className="kpi-card">
           <div className="kpi-icon box-icon">📦</div>
           <div className="kpi-content">
-            <h3 className="kpi-title">Tổng đơn hàng</h3>
+            <h3 className="kpi-title">Total Orders</h3>
             <div className="kpi-value">{totalOrders.toLocaleString()}</div>
             <div className={`kpi-detail ${Number(orderGrowth) >= 0 ? 'positive' : 'negative'}`}>
-              {Number(orderGrowth) >= 0 ? '↑' : '↓'} {Math.abs(Number(orderGrowth))}% so với tháng trước
+              {Number(orderGrowth) >= 0 ? '↑' : '↓'} {Math.abs(Number(orderGrowth))}% compared to last month
             </div>
           </div>
         </div>
@@ -169,10 +169,10 @@ const Dashboard = () => {
         <div className="kpi-card">
           <div className="kpi-icon truck-icon">🚚</div>
           <div className="kpi-content">
-            <h3 className="kpi-title">Tỷ lệ giao đúng hạn</h3>
+            <h3 className="kpi-title">On-time Delivery Rate</h3>
             <div className="kpi-value">{onTimeRate}%</div>
             <div className="kpi-detail">
-              {onTimeDelivery.toLocaleString()} / {totalDeliveries.toLocaleString()} đơn hàng
+              {onTimeDelivery.toLocaleString()} / {totalDeliveries.toLocaleString()} orders
             </div>
           </div>
         </div>
@@ -180,10 +180,10 @@ const Dashboard = () => {
         <div className="kpi-card">
           <div className="kpi-icon tag-icon">🏷️</div>
           <div className="kpi-content">
-            <h3 className="kpi-title">Danh mục sản phẩm</h3>
+            <h3 className="kpi-title">Product Categories</h3>
             <div className="kpi-value">{categoriesCount}</div>
             <div className="kpi-detail">
-              Top danh mục: {topCategory}
+            Top Category: {topCategory}
             </div>
           </div>
         </div>
@@ -191,10 +191,10 @@ const Dashboard = () => {
         <div className="kpi-card">
           <div className="kpi-icon chart-icon">📈</div>
           <div className="kpi-content">
-            <h3 className="kpi-title">Dự báo tăng trưởng</h3>
+            <h3 className="kpi-title">Forecasted Growth</h3>
             <div className="kpi-value">{forecastGrowth}%</div>
             <div className="kpi-detail">
-              Dự báo tiếp theo: {nextForecastValue.toLocaleString()} đơn
+            Next Forecast: {nextForecastValue.toLocaleString()} orders
             </div>
           </div>
         </div>
@@ -204,75 +204,75 @@ const Dashboard = () => {
       <div className="dashboard-tiles">
         {/* Analysis Section */}
         <div className="dashboard-tile">
-          <h2 className="tile-title">Phân tích nhu cầu</h2>
+          <h2 className="tile-title">Demand Analysis</h2>
           <div className="tile-content">
             <div className="analysis-metrics">
               <div className="metric">
-                <div className="metric-label">Top danh mục</div>
+                <div className="metric-label">Top Category</div>
                 <div className="metric-value">{topCategory}</div>
               </div>
               <div className="metric">
-                <div className="metric-label">Đặt hàng trung bình / tháng</div>
+                <div className="metric-label">Average Orders / Month</div>
                 <div className="metric-value">
                   {(totalOrders / (monthlyOrders.length || 1)).toFixed(0)}
                 </div>
               </div>
               <div className="metric">
-                <div className="metric-label">Giao hàng đúng hạn</div>
+                <div className="metric-label">On-time Deliveries</div>
                 <div className="metric-value">{onTimeRate}%</div>
               </div>
             </div>
             <button onClick={() => navigateTo('/analysis')} className="tile-button">
-              Xem phân tích chi tiết
+            View Detailed Analysis
             </button>
           </div>
         </div>
 
         {/* Forecast Section */}
         <div className="dashboard-tile">
-          <h2 className="tile-title">Dự báo nhu cầu</h2>
+          <h2 className="tile-title">Demand Forecast</h2>
           <div className="tile-content">
             <div className="forecast-metrics">
               <div className="metric">
-                <div className="metric-label">Dự báo 6 tháng</div>
+                <div className="metric-label">6-Month Forecast</div>
                 <div className="metric-value">
                   {forecast?.forecast_table?.[forecast.forecast_table.length - 1]?.xgboost || "N/A"}
                 </div>
               </div>
               <div className="metric">
-                <div className="metric-label">Mô hình dự báo</div>
+                <div className="metric-label">Forecast Model</div>
                 <div className="metric-value">XGBoost + ARIMA</div>
               </div>
               <div className="metric">
-                <div className="metric-label">Tăng trưởng dự kiến</div>
+                <div className="metric-label">Expected Growth</div>
                 <div className="metric-value">{forecastGrowth}%</div>
               </div>
             </div>
             <button onClick={() => navigateTo('/forecast')} className="tile-button primary">
-              Xem dự báo chi tiết
+            View Detailed Forecast
             </button>
           </div>
         </div>
 
         {/* Inventory Section */}
         <div className="dashboard-tile">
-          <h2 className="tile-title">Tối ưu tồn kho</h2>
+          <h2 className="tile-title">Inventory Optimization</h2>
           <div className="tile-content">
             <div className="inventory-metrics">
               <div className="metric">
-                <div className="metric-label">Danh mục tồn kho</div>
+                <div className="metric-label">Inventory Categories</div>
                 <div className="metric-value">{categoriesCount}</div>
               </div>
               <div className="metric">
-                <div className="metric-label">Thời gian giao trung bình</div>
+                <div className="metric-label">Average Delivery Time</div>
                 <div className="metric-value">
                   {summary?.avg_shipping_duration_by_seller ? 
                     Object.values(summary.avg_shipping_duration_by_seller).reduce((sum, val) => sum + val, 0) / 
-                    Object.values(summary.avg_shipping_duration_by_seller).length : "N/A"} ngày
+                    Object.values(summary.avg_shipping_duration_by_seller).length : "N/A"} days
                 </div>
               </div>
               <div className="metric">
-                <div className="metric-label">Chi phí vận chuyển</div>
+                <div className="metric-label">Shipping Cost</div>
                 <div className="metric-value">
                   {summary?.avg_shipping_cost_by_category ?
                     (Object.values(summary.avg_shipping_cost_by_category).reduce((sum, val) => sum + val, 0) / 
@@ -281,7 +281,7 @@ const Dashboard = () => {
               </div>
             </div>
             <button onClick={() => navigateTo('/reorder')} className="tile-button">
-              Xem chiến lược tồn kho
+            View Inventory Strategy
             </button>
           </div>
         </div>

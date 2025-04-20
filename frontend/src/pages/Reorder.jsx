@@ -57,7 +57,7 @@ const Reorder = () => {
       await downloadRecommendationExcel();
     } catch (error) {
       alert(
-        "❌ Không thể tải file Excel khuyến nghị. Có thể chưa có dữ liệu phù hợp."
+        "❌ Unable to download the recommendation Excel file. There may be no suitable data."
       );
       console.error("Download failed:", error);
     }
@@ -166,11 +166,11 @@ const Reorder = () => {
       } catch (err) {
         console.error("Error fetching reorder data:", err);
         setError(
-          "Không thể tải dữ liệu chiến lược tồn kho. Vui lòng thử lại sau."
+          "Unable to load inventory strategy data. Please try again later."
         );
         setLoading(false);
 
-        // Nếu lỗi và chưa retry quá nhiều lần, thử lại sau 5 giây
+        // Nếu lỗi và chưa retry quá nhiều lần, Retry sau 5 giây
         if (retryCount < 3) {
           setTimeout(() => {
             setRetryCount((prev) => prev + 1);
@@ -192,7 +192,7 @@ const Reorder = () => {
 
   if (loading)
     return (
-      <LoadingSpinner message="Đang tải dữ liệu chiến lược tồn kho. Quá trình này có thể mất vài phút nếu dữ liệu vừa được tải lên." />
+      <LoadingSpinner message="Loading inventory strategy data. This may take a few minutes if the data was just uploaded." />
     );
 
   if (error)
@@ -200,11 +200,10 @@ const Reorder = () => {
       <div className="error-with-retry">
         <ErrorMessage message={error} />
         <button className="retry-button" onClick={handleRetry}>
-          Thử lại
+          Retry
         </button>
         <p className="retry-note">
-          Lưu ý: Sau khi tải lên dữ liệu mới, hệ thống cần thời gian để xử lý và
-          tính toán chiến lược tồn kho.
+        Note: After uploading new data, the system needs time to process and compute inventory strategies.
         </p>
       </div>
     );
@@ -225,9 +224,9 @@ const Reorder = () => {
   if (!hasStrategyData && !hasChartData) {
     return (
       <div className="error-with-retry">
-        <ErrorMessage message="Không thể tải dữ liệu chiến lược tồn kho. Vui lòng thử lại sau." />
+        <ErrorMessage message="Unable to load inventory strategy data. Please retry later." />
         <button className="retry-button" onClick={handleRetry}>
-          Thử lại
+          Retry
         </button>
       </div>
     );
@@ -235,7 +234,7 @@ const Reorder = () => {
 
   return (
     <div className="reorder">
-      <h1 className="page-title">Chiến lược tồn kho</h1>
+      <h1 className="page-title">Inventory Strategy</h1>
 
       {/* Tabs */}
       <div className="tabs">
@@ -243,27 +242,27 @@ const Reorder = () => {
           className={`tab ${activeTab === "analysis" ? "active" : ""}`}
           onClick={() => setActiveTab("analysis")}
         >
-          Phân tích nhà cung cấp
+          Supplier Analysis
         </button>
 
         <button
           className={`tab ${activeTab === "strategy" ? "active" : ""}`}
           onClick={() => setActiveTab("strategy")}
         >
-          Bảng chiến lược
+          Strategy Table
         </button>
         <button
           className={`tab ${activeTab === "charts" ? "active" : ""}`}
           onClick={() => setActiveTab("charts")}
         >
-          Biểu đồ phân tích
+          Analytical Charts
         </button>
         {hasRecommendations && (
           <button
             className={`tab ${activeTab === "recommendations" ? "active" : ""}`}
             onClick={() => setActiveTab("recommendations")}
           >
-            Khuyến nghị tối ưu
+            Optimization Recommendations
           </button>
         )}
       </div>
@@ -272,7 +271,7 @@ const Reorder = () => {
       {activeTab === "strategy" && (
         <div className="card">
           <div className="card-header">
-            <h2 className="card-title">Chiến lược tồn kho theo danh mục</h2>
+            <h2 className="card-title">Inventory Strategy by Category</h2>
           </div>
           <div className="card-body">
             {hasStrategyData ? (
@@ -280,14 +279,14 @@ const Reorder = () => {
                 <table className="reorder-table">
                   <thead>
                     <tr>
-                      <th>Danh mục</th>
-                      <th>Lead Time (ngày)</th>
-                      <th>Dự báo nhu cầu</th>
-                      <th>Độ lệch chuẩn</th>
+                      <th>Category</th>
+                      <th>Lead Time (days)</th>
+                      <th>Forecasted Demand</th>
+                      <th>Standard Deviation</th>
                       <th>Safety Stock</th>
                       <th>Reorder Point</th>
-                      <th>Tồn kho tối ưu</th>
-                      <th>Chi phí lưu kho</th>
+                      <th>Optimal Inventory</th>
+                      <th>Holding Cost</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -313,10 +312,10 @@ const Reorder = () => {
             ) : (
               <div className="no-data-message">
                 <p>
-                  Không có dữ liệu chiến lược tồn kho. Vui lòng thử lại sau.
+                No inventory strategy data available. Please try again later.
                 </p>
                 <button className="retry-button" onClick={handleRetry}>
-                  Thử lại
+                  Retry
                 </button>
               </div>
             )}
@@ -329,7 +328,7 @@ const Reorder = () => {
         <div className="recommendations-container">
           <div className="card">
             <div className="card-header">
-              <h2 className="card-title">Khuyến nghị tối ưu hóa tồn kho</h2>
+              <h2 className="card-title">Inventory Optimization Recommendations</h2>
             </div>
             <div className="card-body">
               <div className="download-section">
@@ -337,15 +336,14 @@ const Reorder = () => {
                   className="download-button"
                   onClick={handleDownloadExcel}
                 >
-                  📥 Tải Excel khuyến nghị
+                  📥 Download Recommendation Excel
                 </button>
               </div>
 
               <div className="recommendations-intro">
                 <Info size={20} />
                 <p>
-                  Dựa trên phân tích dữ liệu, hệ thống đưa ra các khuyến nghị để
-                  tối ưu hóa chiến lược tồn kho cho từng danh mục sản phẩm.
+                Based on data analysis, the system provides recommendations to optimize the inventory strategy for each product category.
                 </p>
               </div>
 
@@ -356,15 +354,15 @@ const Reorder = () => {
                     {item.recommendations.map((rec, recIndex) => {
                       // Xác định loại khuyến nghị dựa trên nội dung
                       const isWarning =
-                        rec.toLowerCase().includes("cảnh báo") ||
-                        rec.toLowerCase().includes("quá cao") ||
-                        rec.toLowerCase().includes("quá thấp") ||
-                        rec.toLowerCase().includes("rủi ro");
+                        rec.toLowerCase().includes("warning") ||
+                        rec.toLowerCase().includes("too high") ||
+                        rec.toLowerCase().includes("too low") ||
+                        rec.toLowerCase().includes("risk");
 
                       const isPositive =
-                        rec.toLowerCase().includes("tốt") ||
-                        rec.toLowerCase().includes("phù hợp") ||
-                        rec.toLowerCase().includes("hiệu quả");
+                        rec.toLowerCase().includes("good") ||
+                        rec.toLowerCase().includes("appropriate") ||
+                        rec.toLowerCase().includes("efficient");
 
                       return (
                         <li
@@ -396,7 +394,7 @@ const Reorder = () => {
   <div className="card">
     <div className="card-header">
       <h2 className="card-title">
-        Top 15 danh mục theo Reorder Point
+      Top 15 Categories by Reorder Point
       </h2>
     </div>
     <div className="card-body">
@@ -426,7 +424,7 @@ const Reorder = () => {
             <div className="card">
               <div className="card-header">
                 <h2 className="card-title">
-                  Top 15 danh mục theo Safety Stock
+                Top 15 Categories by Safety Stock
                 </h2>
               </div>
               <div className="card-body">
@@ -455,7 +453,7 @@ const Reorder = () => {
           {topLeadTime.length > 0 && (
             <div className="card">
               <div className="card-header">
-                <h2 className="card-title">Top 15 danh mục theo Lead Time</h2>
+                <h2 className="card-title">Top 15 Categories by Lead Time</h2>
               </div>
               <div className="card-body">
                 <ResponsiveContainer width="100%" height={400}>
@@ -474,7 +472,7 @@ const Reorder = () => {
                     <Legend />
                     <Bar
                       dataKey="value"
-                      name="Lead Time (ngày)"
+                      name="Lead Time (days)"
                       fill="#ff9800"
                     />
                   </BarChart>
@@ -488,7 +486,7 @@ const Reorder = () => {
             <div className="card">
               <div className="card-header">
                 <h2 className="card-title">
-                  Top 15 danh mục theo Tồn kho tối ưu
+                Top 15 Categories by Optimal Inventory
                 </h2>
               </div>
               <div className="card-body">
@@ -506,7 +504,7 @@ const Reorder = () => {
                     <YAxis />
                     <Tooltip formatter={(value) => value.toLocaleString()} />
                     <Legend />
-                    <Bar dataKey="value" name="Tồn kho tối ưu" fill="#9c27b0" />
+                    <Bar dataKey="value" name="Optimal Inventory" fill="#9c27b0" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -517,7 +515,7 @@ const Reorder = () => {
   <div className="card">
     <div className="card-header">
       <h2 className="card-title">
-        Top 15 danh mục theo Chi phí lưu kho
+      Top 15 Categories by Holding Cost
       </h2>
     </div>
     <div className="card-body">
@@ -538,7 +536,7 @@ const Reorder = () => {
           />
           <Tooltip formatter={(value) => formatVND(value)} />
           <Legend />
-          <Bar dataKey="value" name="Chi phí lưu kho" fill="#f44336" />
+          <Bar dataKey="value" name="Holding Cost" fill="#f44336" />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -549,7 +547,7 @@ const Reorder = () => {
   <div className="card">
     <div className="card-header">
       <h2 className="card-title">
-        Top 15 danh mục theo Tiềm năng tiết kiệm chi phí
+      Top 15 Categories by Potential Cost Savings
       </h2>
     </div>
     <div className="card-body">
@@ -572,7 +570,7 @@ const Reorder = () => {
           <Legend />
           <Bar
             dataKey="value"
-            name="Tiềm năng tiết kiệm"
+            name="Potential Savings"
             fill="#00bcd4"
           />
         </BarChart>
@@ -582,9 +580,9 @@ const Reorder = () => {
 )}
           {!hasChartData && (
             <div className="no-data-message">
-              <p>Không có dữ liệu biểu đồ phân tích. Vui lòng thử lại sau.</p>
+              <p>No analytical chart data available. Please try again later.</p>
               <button className="retry-button" onClick={handleRetry}>
-                Thử lại
+                Retry
               </button>
             </div>
           )}
@@ -599,7 +597,7 @@ const Reorder = () => {
             <div className="card">
               <div className="card-header">
                 <h2 className="card-title">
-                  Nhóm nhà cung cấp theo hành vi giao hàng
+                Supplier Clustering by Delivery Behavior
                 </h2>
               </div>
               <div className="card-body">
@@ -610,13 +608,13 @@ const Reorder = () => {
                     <XAxis
                       type="number"
                       dataKey="avg_shipping_days"
-                      name="Thời gian giao hàng trung bình"
-                      unit=" ngày"
+                      name="Average Shipping Days"
+                      unit=" days"
                     />
                     <YAxis
                       type="number"
                       dataKey="avg_freight"
-                      name="Chi phí giao hàng trung bình"
+                      name="Average Freight Cost"
                       // unit=" ₫"
                       tickFormatter={(value) => `${value / 1000}k`}
                     />
@@ -624,12 +622,12 @@ const Reorder = () => {
                       type="number"
                       dataKey="total_orders"
                       range={[60, 400]}
-                      name="Tổng đơn"
-                      unit=" đơn"
+                      name="Total Orders"
+                      unit=" orders"
                     />
                     <Tooltip
                       formatter={(value, name) => {
-                        if (name === "Chi phí giao hàng trung bình") {
+                        if (name === "Average Freight Cost") {
                           return [formatVND(value), name];
                         }
                         return [value, name];
@@ -662,7 +660,7 @@ const Reorder = () => {
             <div className="card">
               <div className="card-header">
                 <h2 className="card-title">
-                  Danh mục có tỷ lệ giao hàng trễ cao
+                Categories with High Late Delivery Rate
                 </h2>
               </div>
               <div className="card-body">
@@ -682,7 +680,7 @@ const Reorder = () => {
                     <Legend />
                     <Bar
                       dataKey="late_ratio"
-                      name="Tỷ lệ trễ (%)"
+                      name="Late Delivery Rate (%)"
                       fill="#e91e63"
                     />
                   </BarChart>
@@ -693,9 +691,9 @@ const Reorder = () => {
 
           {supplierClusters.length === 0 && bottlenecks.length === 0 && (
             <div className="no-data-message">
-              <p>Không có dữ liệu phân tích nhà cung cấp hoặc bottlenecks.</p>
+              <p>No supplier analysis or bottleneck data available.</p>
               <button className="retry-button" onClick={handleRetry}>
-                Thử lại
+                Retry
               </button>
             </div>
           )}

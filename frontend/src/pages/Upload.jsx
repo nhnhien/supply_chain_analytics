@@ -41,12 +41,12 @@ const UploadPage = () => {
     const validFiles = selectedFiles.filter((file) => file.name.endsWith(".csv"))
 
     if (validFiles.length === 0) {
-      toast.error("Vui lòng chọn file CSV")
+      toast.error("Please select a CSV file")
       return
     }
 
     if (validFiles.length < selectedFiles.length) {
-      toast.warning("Chỉ các file CSV được chấp nhận")
+      toast.warning("Only CSV files are accepted")
     }
 
     setFiles((prevFiles) => [...prevFiles, ...validFiles])
@@ -69,12 +69,12 @@ const UploadPage = () => {
     const validFiles = droppedFiles.filter((file) => file.name.endsWith(".csv"))
 
     if (validFiles.length === 0) {
-      toast.error("Vui lòng chọn file CSV")
+      toast.error("Please select a CSV file")
       return
     }
 
     if (validFiles.length < droppedFiles.length) {
-      toast.warning("Chỉ các file CSV được chấp nhận")
+      toast.warning("Only CSV files are accepted")
     }
 
     setFiles((prevFiles) => [...prevFiles, ...validFiles])
@@ -100,7 +100,7 @@ const UploadPage = () => {
 
   const handleUpload = async () => {
     if (files.length === 0) {
-      toast.error("Vui lòng chọn file để tải lên")
+      toast.error("Please select files to upload")
       return
     }
 
@@ -124,7 +124,7 @@ const UploadPage = () => {
       setUploadedFiles(uploaded)
       
       // Thông báo thành công với thông tin thêm về thời gian xử lý
-      toast.success("Tải lên thành công! Đang tải trước dữ liệu cho tất cả các trang...", { duration: 6000 })
+      toast.success("Upload success! Preloading data for all pages...", { duration: 6000 })
 
       setFiles([])
       setIsUploading(false)
@@ -146,7 +146,7 @@ const UploadPage = () => {
 
         setTimeout(() => {
           setIsPreloading(false)
-          toast.success("Đã tải xong dữ liệu cho tất cả các trang!")
+          toast.success("All page data has been successfully loaded!")
 
           // Chuyển hướng đến trang Dashboard sau khi tải xong
           navigate("/")
@@ -156,7 +156,7 @@ const UploadPage = () => {
         stopSimulation()
         setIsPreloading(false)
         toast.error(
-          "Có lỗi khi tải trước dữ liệu. Bạn vẫn có thể truy cập các trang nhưng có thể phải đợi dữ liệu tải.",
+          "Error while preloading data. You can still access the pages, but data may take time to load.",
         )
 
         // Chuyển hướng đến trang Dashboard ngay cả khi có lỗi
@@ -164,7 +164,7 @@ const UploadPage = () => {
       }
     } catch (error) {
       console.error("Upload error:", error)
-      toast.error("Lỗi khi tải lên file. Vui lòng thử lại.")
+      toast.error("Error uploading file. Please try again.")
       setIsUploading(false)
     }
   }
@@ -172,12 +172,12 @@ const UploadPage = () => {
   const handleClearUploadedFiles = () => {
     if (
       window.confirm(
-        "Bạn có chắc chắn muốn xóa tất cả file đã upload? Điều này sẽ xóa cache và yêu cầu tải lên lại dữ liệu.",
+        "Are you sure you want to delete all uploaded files? This will clear the cache and require re-uploading the data.",
       )
     ) {
       clearAllCache()
       setUploadedFiles([])
-      toast.success("Đã xóa tất cả file đã upload và cache")
+      toast.success("All uploaded files and cache have been deleted.")
     }
   }
 
@@ -193,20 +193,20 @@ const UploadPage = () => {
 
   return (
     <div className="upload-page">
-      <h1 className="page-title">Tải lên dữ liệu</h1>
+      <h1 className="page-title">Upload Data</h1>
 
       {/* Hiển thị tiến trình tải trước dữ liệu */}
       {isPreloading && (
         <div className="preloading-container">
           <div className="preloading-content">
             <Loader className="preloading-icon" />
-            <h3>Đang tải trước dữ liệu cho tất cả các trang...</h3>
+            <h3>Preloading data for all pages...</h3>
             <div className="progress-bar-container">
               <div className="progress-bar" style={{ width: `${preloadProgress}%` }}></div>
             </div>
-            <p className="preloading-text">{preloadProgress}% hoàn thành</p>
+            <p className="preloading-text">{preloadProgress}% completed</p>
             <p className="preloading-note">
-              Quá trình này có thể mất vài phút. Vui lòng không đóng hoặc tải lại trang.
+            This process may take a few minutes. Please do not close or refresh the page.
             </p>
           </div>
         </div>
@@ -216,18 +216,17 @@ const UploadPage = () => {
       {uploadedFiles.length > 0 && (
         <div className="card">
           <div className="card-header">
-            <h2 className="card-title">File đã tải lên</h2>
+            <h2 className="card-title">Uploaded Files</h2>
             <button className="btn btn-secondary" onClick={handleClearUploadedFiles}>
               <RefreshCw size={16} />
-              <span>Xóa tất cả</span>
+              <span>Clear All</span>
             </button>
           </div>
           <div className="card-body">
             <div className="uploaded-files-info">
               <Info size={20} />
               <p>
-                Dữ liệu đã được tải lên và đang được sử dụng. Nếu bạn muốn tải lên dữ liệu mới, hãy xóa các file hiện
-                tại trước.
+              Data has been uploaded and is currently in use. To upload new data, please remove existing files first.
               </p>
             </div>
             <div className="uploaded-files-list">
@@ -247,16 +246,15 @@ const UploadPage = () => {
       {/* Form upload file mới */}
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">Tải lên file CSV</h2>
+          <h2 className="card-title">Upload CSV File</h2>
         </div>
         <div className="card-body">
           <div className="upload-notice">
             <Info size={20} />
             <p>
-              Sau khi tải lên, hệ thống sẽ tự động tải trước dữ liệu cho tất cả các trang. Quá trình này có thể mất vài
-              phút, nhưng sẽ giúp bạn truy cập các trang nhanh hơn sau đó. Dữ liệu sẽ được lưu trữ ngay cả khi bạn tải
-              lại trang.
-            </p>
+  After uploading, the system will automatically preload data for all pages. This process may take a few minutes,
+  but it will help you access the pages faster afterward. The data will be retained even if you refresh the page.
+</p>
           </div>
 
           <div
@@ -269,25 +267,25 @@ const UploadPage = () => {
               <Upload size={48} />
             </div>
             <div className="upload-text">
-              <p>Kéo và thả file CSV vào đây hoặc</p>
+              <p>Drag and drop your CSV files here or</p>
               <label className="upload-button">
-                Chọn file
+              Choose File
                 <input type="file" accept=".csv" onChange={handleFileChange} multiple hidden />
               </label>
             </div>
-            <p className="upload-note">Chỉ hỗ trợ file CSV</p>
+            <p className="upload-note">Only CSV files are supported</p>
           </div>
 
           {files.length > 0 && (
             <div className="selected-files">
-              <h3 className="files-heading">File đã chọn ({files.length})</h3>
+              <h3 className="files-heading">Selected Files ({files.length})</h3>
               <div className="files-list">
                 {files.map((file, index) => (
                   <div className="selected-file" key={index}>
                     <FileText size={16} />
                     <span className="file-name">{file.name}</span>
                     <span className="file-size">({(file.size / 1024).toFixed(2)} KB)</span>
-                    <button className="remove-file-btn" onClick={() => removeFile(index)} title="Xóa file">
+                    <button className="remove-file-btn" onClick={() => removeFile(index)} title="Remove File">
                       &times;
                     </button>
                   </div>
@@ -305,12 +303,12 @@ const UploadPage = () => {
               {isUploading ? (
                 <>
                   <div className="spinner-small"></div>
-                  <span>Đang tải lên...</span>
+                  <span>Uploading...</span>
                 </>
               ) : (
                 <>
                   <Upload size={16} />
-                  <span>Tải lên {files.length > 0 ? `(${files.length} file)` : ""}</span>
+                  <span>Upload  {files.length > 0 ? `(${files.length} file)` : ""}</span>
                 </>
               )}
             </button>
@@ -320,7 +318,7 @@ const UploadPage = () => {
 
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">Hướng dẫn</h2>
+          <h2 className="card-title">Instructions</h2>
         </div>
         <div className="card-body">
           <div className="instructions">
@@ -329,8 +327,8 @@ const UploadPage = () => {
                 <Check size={20} color="#4caf50" />
               </div>
               <div className="instruction-text">
-                <h3>Định dạng file</h3>
-                <p>Hệ thống chỉ hỗ trợ file CSV với các cột dữ liệu đúng định dạng.</p>
+                <h3>File Format</h3>
+                <p>The system only supports CSV files with properly formatted columns.</p>
               </div>
             </div>
 
@@ -339,8 +337,8 @@ const UploadPage = () => {
                 <AlertCircle size={20} color="#ff9800" />
               </div>
               <div className="instruction-text">
-                <h3>Lưu ý quan trọng</h3>
-                <p>Việc tải lên file mới sẽ xóa cache và cập nhật toàn bộ dữ liệu phân tích.</p>
+                <h3>Important Note</h3>
+                <p>Uploading new files will clear the cache and update all analysis data.</p>
               </div>
             </div>
 
@@ -349,8 +347,8 @@ const UploadPage = () => {
                 <FileText size={20} color="#2196f3" />
               </div>
               <div className="instruction-text">
-                <h3>Các file cần thiết</h3>
-                <p>Hệ thống cần các file sau: df_Customers.csv, df_Orders.csv, df_OrderItems.csv, df_Products.csv</p>
+                <h3>Required Files</h3>
+                <p>The system requires the following files: df_Customers.csv, df_Orders.csv, df_OrderItems.csv, df_Products.csv</p>
               </div>
             </div>
           </div>

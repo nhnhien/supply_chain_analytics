@@ -46,7 +46,7 @@ const Forecast = () => {
           : [];
         
         if (allResults.length === 0) {
-          throw new Error("Không có danh mục nào đủ dữ liệu để dự báo.");
+          throw new Error("No category has enough data for forecasting.");
         }
 
         setForecastData(allResults);
@@ -54,7 +54,7 @@ const Forecast = () => {
         setLoading(false);
       } catch (err) {
         console.error("Error fetching forecast data:", err);
-        setError(err.message || "Không thể tải dữ liệu dự báo.");
+        setError(err.message || "Failed to load forecast data.");
         setLoading(false);
         if (retryCount < 3) {
           setTimeout(() => setRetryCount((prev) => prev + 1), 5000);
@@ -99,9 +99,9 @@ const Forecast = () => {
     if (active && payload && payload.length) {
       return (
         <div className="custom-tooltip">
-          <p className="tooltip-label">{`Tháng: ${label}`}</p>
+          <p className="tooltip-label">{`Month: ${label}`}</p>
           <p className="tooltip-value">{`${payload[0].name}: ${payload[0].value.toLocaleString()}`}</p>
-          {payload[0].payload.type && <p className="tooltip-type">{`Loại: ${payload[0].payload.type}`}</p>}
+          {payload[0].payload.type && <p className="tooltip-type">{`Type: ${payload[0].payload.type}`}</p>}
         </div>
       );
     }
@@ -110,7 +110,7 @@ const Forecast = () => {
 
   if (loading)
     return (
-      <LoadingSpinner message="Đang tải dữ liệu dự báo. Quá trình này có thể mất vài phút nếu dữ liệu vừa được tải lên." />
+      <LoadingSpinner message="Loading forecast data. This may take a few minutes if the data was just uploaded." />
     );
 
   if (error)
@@ -118,19 +118,19 @@ const Forecast = () => {
       <div className="error-with-retry">
         <ErrorMessage message={error} />
         <button className="retry-button" onClick={handleRetry}>
-          Thử lại
+          Retry
         </button>
-        <p className="retry-note">Lưu ý: Sau khi tải lên dữ liệu mới, hệ thống cần thời gian để xử lý và tính toán dự báo.</p>
+        <p className="retry-note">Note: After uploading new data, the system requires time to process and compute the forecasts.</p>
       </div>
     );
 
   return (
     <div className="forecast">
-      <h1 className="page-title">Dự báo nhu cầu</h1>
+      <h1 className="page-title">Demand Forecast</h1>
 
       <div className="selectors">
         <div className="category-selector">
-          <label>Chọn danh mục: </label>
+          <label>Select Category: </label>
           <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
             {forecastData.map((cat) => (
               <option key={cat.category} value={cat.category}>
@@ -141,11 +141,11 @@ const Forecast = () => {
         </div>
 
         <div className="model-selector">
-          <label>Chọn mô hình dự báo: </label>
+          <label>Select Forecast Model: </label>
           <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
             <option value="xgboost">XGBoost</option>
             <option value="arima">ARIMA</option>
-            <option value="both">So sánh cả 2 mô hình</option>
+            <option value="both">Compare Both Models</option>
           </select>
         </div>
       </div>
@@ -155,7 +155,7 @@ const Forecast = () => {
         <div className="stat-card">
           <div className="stat-icon forecast-icon">📈</div>
           <div className="stat-info">
-            <div className="stat-title">Dự báo tháng tới</div>
+            <div className="stat-title">Forecast for Next Month</div>
             <div className="stat-value">{firstForecast?.orders?.toLocaleString() || "-"}</div>
             <div className={`stat-change ${forecastChange >= 0 ? "positive" : "negative"}`}>
               {forecastChange >= 0 ? "↑" : "↓"} {Math.abs(forecastChange)}%
@@ -166,9 +166,9 @@ const Forecast = () => {
         <div className="stat-card">
           <div className="stat-icon average-icon">📊</div>
           <div className="stat-info">
-            <div className="stat-title">Trung bình 6 tháng tới</div>
+            <div className="stat-title">Average for Next 6 Months</div>
             <div className="stat-value">{Number(avgForecast).toLocaleString()}</div>
-            <div className="stat-detail">đơn hàng/tháng</div>
+            <div className="stat-detail">orders/month</div>
           </div>
         </div>
       </div>
@@ -176,7 +176,7 @@ const Forecast = () => {
       {/* Biểu đồ */}
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">Biểu đồ dự báo</h2>
+          <h2 className="card-title">Forecast Chart</h2>
         </div>
         <div className="card-body">
           <ResponsiveContainer width="100%" height={400}>
@@ -190,7 +190,7 @@ const Forecast = () => {
                 type="monotone"
                 dataKey="orders"
                 stroke="#2196f3"
-                name="Thực tế"
+                name="Actual"
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
@@ -234,16 +234,16 @@ const Forecast = () => {
       {/* Bảng chi tiết */}
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">Chi tiết dự báo theo tháng</h2>
+          <h2 className="card-title">Monthly Forecast Details</h2>
         </div>
         <div className="card-body">
           <div className="table-container">
             <table className="forecast-table">
               <thead>
                 <tr>
-                  <th>Tháng</th>
-                  <th>Số đơn hàng dự báo</th>
-                  <th>So với tháng trước</th>
+                  <th>Month</th>
+                  <th>Forecasted Orders</th>
+                  <th>Compared to Previous Month</th>
                 </tr>
               </thead>
               <tbody>
@@ -269,13 +269,13 @@ const Forecast = () => {
       {currentCategoryData?.mae_rmse_comparison && (
   <div className="card">
     <div className="card-header">
-      <h2 className="card-title">So sánh độ chính xác mô hình</h2>
+      <h2 className="card-title">Model Accuracy Comparison</h2>
     </div>
     <div className="card-body">
       <table className="forecast-table">
         <thead>
           <tr>
-            <th>Mô hình</th>
+            <th>Model</th>
             <th>MAE</th>
             <th>RMSE</th>
           </tr>
@@ -304,14 +304,14 @@ const Forecast = () => {
   <td className={model === betterMaeModel ? "highlight-better" : "highlight-worse"}>
     {mae.toLocaleString()}
     {model === betterMaeModel && (
-      <span className="ml-1" title="Chỉ số MAE tốt hơn">👍</span>
+      <span className="ml-1" title="Better MAE">👍</span>
     )}
   </td>
 
   <td className={model === betterRmseModel ? "highlight-better" : "highlight-worse"}>
     {rmse.toLocaleString()}
     {model === betterRmseModel && (
-      <span className="ml-1" title="Chỉ số RMSE tốt hơn">👍</span>
+      <span className="ml-1" title="Better RMSE">👍</span>
     )}
   </td>
 </tr>

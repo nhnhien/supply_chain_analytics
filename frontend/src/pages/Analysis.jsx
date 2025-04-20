@@ -68,7 +68,7 @@ const Analysis = () => {
         try {
           const topCategoriesRes = await getTopCategoriesChart()
           setTopCategories(topCategoriesRes.data.data)
-          console.log(`Số danh mục nhận được: ${topCategoriesRes.data.data.length}`)
+          console.log(`Top categories received: ${topCategoriesRes.data.data.length}`)
         } catch (err) {
           console.error("Error fetching top categories:", err)
         }
@@ -119,7 +119,7 @@ const Analysis = () => {
 
   if (loading)
     return (
-      <LoadingSpinner message="Đang tải dữ liệu phân tích. Quá trình này có thể mất vài phút nếu dữ liệu vừa được tải lên." />
+      <LoadingSpinner message="Loading analysis data. This may take a few minutes if the data was just uploaded." />
     )
 
   if (error)
@@ -127,10 +127,10 @@ const Analysis = () => {
       <div className="error-with-retry">
         <ErrorMessage message={error} />
         <button className="retry-button" onClick={handleRetry}>
-          Thử lại
+          Retry
         </button>
         <p className="retry-note">
-          Lưu ý: Sau khi tải lên dữ liệu mới, hệ thống cần thời gian để xử lý và tính toán các phân tích.
+        Note: After uploading new data, the system needs time to process and compute analytics.
         </p>
       </div>
     )
@@ -147,9 +147,9 @@ const Analysis = () => {
   if (!hasData) {
     return (
       <div className="error-with-retry">
-        <ErrorMessage message="Không thể tải dữ liệu phân tích. Vui lòng thử lại sau." />
+        <ErrorMessage message="Unable to load analysis data. Please try again later." />
         <button className="retry-button" onClick={handleRetry}>
-          Thử lại
+          Retry
         </button>
       </div>
     )
@@ -166,13 +166,13 @@ const Analysis = () => {
 
   return (
     <div className="analysis">
-      <h1 className="page-title">Phân tích dữ liệu</h1>
+      <h1 className="page-title">Data Analysis</h1>
 
       {/* Biểu đồ đơn hàng theo tháng */}
       {monthlyOrders.length > 0 && (
         <div className="card">
           <div className="card-header">
-            <h2 className="card-title">Đơn hàng theo tháng</h2>
+            <h2 className="card-title">Monthly Orders</h2>
           </div>
           <div className="card-body">
             <ResponsiveContainer width="100%" height={400}>
@@ -196,7 +196,7 @@ const Analysis = () => {
                   type="monotone"
                   dataKey="value"
                   stroke="#2196f3"
-                  name="Số đơn hàng"
+                  name="Number of Orders"
                   strokeWidth={2}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}
@@ -211,7 +211,7 @@ const Analysis = () => {
       {topCategories.length > 0 && (
         <div className="card">
 <div className="card-header">
-  <h2 className="card-title">Top danh mục sản phẩm theo số lượng đơn hàng</h2>
+  <h2 className="card-title">Top Product Categories by Order Volume</h2>
 </div>
 
           <div className="card-body">
@@ -234,7 +234,7 @@ const Analysis = () => {
                 />
                 <Tooltip formatter={(value) => value.toLocaleString()} />
                 <Legend />
-                <Bar dataKey="value" name="Số lượng" fill="#2196f3" />
+                <Bar dataKey="value" name="Order Volume" fill="#2196f3" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -246,7 +246,7 @@ const Analysis = () => {
         {deliveryDelay.length > 0 && (
           <div className="card">
             <div className="card-header">
-              <h2 className="card-title">Tỷ lệ giao hàng đúng hạn</h2>
+              <h2 className="card-title">On-time Delivery Rate</h2>
             </div>
             <div className="card-body">
               <ResponsiveContainer width="100%" height={300}>
@@ -280,7 +280,7 @@ const Analysis = () => {
         {sellerShipping.length > 0 && (
           <div className="card">
             <div className="card-header">
-              <h2 className="card-title">Thời gian giao hàng theo seller</h2>
+              <h2 className="card-title">Delivery Time by Seller</h2>
             </div>
             <div className="card-body">
               <ResponsiveContainer width="100%" height={300}>
@@ -299,8 +299,8 @@ const Analysis = () => {
                   />
                   <Tooltip 
                     formatter={(value, name, props) => [
-                      `${value.toFixed(1)} ngày`, 
-                      "Thời gian giao hàng"
+                      `${value.toFixed(1)} days`, 
+                      "Delivery Time"
                     ]}
                     labelFormatter={(label, payload) => {
                       if (payload && payload.length > 0) {
@@ -311,7 +311,7 @@ const Analysis = () => {
                     }}
                   />
                   <Legend />
-                  <Bar dataKey="duration" name="Thời gian (ngày)" fill="#ff9800" />
+                  <Bar dataKey="duration" name="Delivery Time (days)" fill="#ff9800" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -323,7 +323,7 @@ const Analysis = () => {
       {shippingCost.length > 0 && (
         <div className="card">
 <div className="card-header">
-  <h2 className="card-title">Top danh mục có chi phí vận chuyển cao nhất</h2>
+  <h2 className="card-title">Top Categories by Shipping Cost</h2>
 </div>
           <div className="card-body">
             <ResponsiveContainer width="100%" height={400}>
@@ -345,7 +345,7 @@ const Analysis = () => {
                 />
                 <Tooltip formatter={(value) => formatVND(value)} />
                 <Legend />
-                <Bar dataKey="cost" name="Chi phí vận chuyển" fill="#9c27b0" />
+                <Bar dataKey="cost" name="Shipping Cost" fill="#9c27b0" />
               </BarChart>
             </ResponsiveContainer>
           </div>
