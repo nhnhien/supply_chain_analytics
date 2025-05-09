@@ -9,15 +9,15 @@ reorder_bp = Blueprint("reorder", __name__, url_prefix="/reorder")
 
 @reorder_bp.route("/strategy", methods=["GET"])
 def get_reorder_strategy():
-    # Kiểm tra xem có yêu cầu sử dụng Spark không
+    # Check if Spark is requested
     use_spark = request.args.get("use_spark", "false").lower() == "true"
     
-    # Nếu không chỉ định, kiểm tra kích thước dữ liệu
+    # If not specified, check data size
     if not use_spark:
         use_spark = is_large_dataset()
         
     if use_spark:
-        print("🚀 Sử dụng Spark để tính toán chiến lược tồn kho")
+        print("🚀 Using Spark to calculate inventory strategy")
         from services.spark_analytics import calculate_reorder_strategy_spark
         result = calculate_reorder_strategy_spark()
     else:
@@ -25,7 +25,7 @@ def get_reorder_strategy():
         
     strategy_df = pd.DataFrame(result)
 
-    # Cập nhật file Excel và khuyến nghị tiềm năng
+    # Update Excel file and potential recommendations
     generate_optimization_recommendations(strategy_df.to_dict(orient="records"))
 
     for index, row in strategy_df.iterrows():
@@ -38,15 +38,15 @@ def get_reorder_strategy():
         category_recommendations = []
 
         if holding_cost > 10000:
-            category_recommendations.append(f"Cảnh báo: Chi phí lưu kho quá cao ({holding_cost}). Xem xét giảm tồn kho tối ưu.")
+            category_recommendations.append(f"Warning: Holding cost is too high ({holding_cost}). Consider reducing optimal inventory.")
         if safety_stock > demand * 2:
-            category_recommendations.append(f"Safety stock ({safety_stock}) cao hơn gấp đôi nhu cầu trung bình ({demand}). Có thể giảm để tiết kiệm chi phí.")
+            category_recommendations.append(f"Safety stock ({safety_stock}) is more than double the average demand ({demand}). Can be reduced to save costs.")
         if lead_time > 15:
-            category_recommendations.append(f"Lead time dài ({lead_time} ngày). Xem xét tìm nhà cung cấp có thời gian giao hàng ngắn hơn.")
+            category_recommendations.append(f"Long lead time ({lead_time} days). Consider finding suppliers with shorter delivery times.")
         if safety_stock < demand * 0.2 and demand > 100:
-            category_recommendations.append(f"Cảnh báo: Safety stock ({safety_stock}) quá thấp so với nhu cầu ({demand}). Có rủi ro hết hàng.")
+            category_recommendations.append(f"Warning: Safety stock ({safety_stock}) is too low compared to demand ({demand}). Risk of stockout.")
         if demand > 500 and holding_cost < 5000:
-            category_recommendations.append(f"Danh mục có nhu cầu cao ({demand}) và chi phí lưu kho thấp ({holding_cost}). Chiến lược tồn kho hiện tại tốt.")
+            category_recommendations.append(f"Category has high demand ({demand}) and low holding cost ({holding_cost}). Current inventory strategy is good.")
         
         if category_recommendations:
             result[index]["optimization_recommendations"] = category_recommendations
@@ -231,18 +231,18 @@ def get_top_potential_saving():
 @reorder_bp.route("/download/recommendations", methods=["GET"])
 def download_recommendations():
     try:
-        # Kiểm tra xem có file đã tồn tại không
+        # Check if file exists
         recommendations_path = os.path.join("charts", "reorder", "optimization_recommendations.xlsx")
         if os.path.exists(recommendations_path):
             return send_file(recommendations_path, as_attachment=True)
 
-        # Nếu chưa có, kiểm tra xem có nên dùng Spark không
+        # If not, check if Spark should be used
         use_spark = request.args.get("use_spark", "false").lower() == "true"
         if not use_spark:
             use_spark = is_large_dataset()
             
         if use_spark:
-            print("🚀 Sử dụng Spark để tạo file khuyến nghị")
+            print("🚀 Using Spark to generate recommendations file")
             from services.spark_analytics import generate_optimization_recommendations_spark
             generated_path = generate_optimization_recommendations_spark()
         else:
@@ -253,7 +253,7 @@ def download_recommendations():
         if generated_path and os.path.exists(generated_path):
             return send_file(generated_path, as_attachment=True)
         else:
-            return jsonify({"error": "Không có khuyến nghị để tải"}), 400
+            return jsonify({"error": "No recommendations available for download"}), 400
 
     except Exception as e:
         print(f"❌ Error in download_recommendations: {str(e)}")
@@ -263,20 +263,20 @@ def download_recommendations():
 def get_supplier_clusters():
     try:
         from services.mongodb import db
-        # Truy vấn dữ liệu từ MongoDB
-        result = list(db["supplier_clusters"].find({}, {"_id": 0}))  # ✅ Ẩn _id
+        # Query data from MongoDB
+        result = list(db["supplier_clusters"].find({}, {"_id": 0}))  # ✅ Hide _id
         
-        # Nếu không có dữ liệu trong MongoDB, thực hiện phân tích và lưu kết quả
+        # If no data in MongoDB, perform analysis and save results
         if not result:
-            print("⚠️ Không có dữ liệu supplier_clusters trong DB, sẽ chạy phân tích mới...")
+            print("⚠️ No supplier_clusters data in DB, will run new analysis...")
             
-            # Kiểm tra xem có nên dùng Spark không
+            # Check if Spark should be used
             use_spark = request.args.get("use_spark", "false").lower() == "true"
             if not use_spark:
                 use_spark = is_large_dataset()
                 
             if use_spark:
-                print("🚀 Sử dụng Spark để phân cụm nhà cung cấp")
+                print("🚀 Using Spark for supplier clustering")
                 from services.spark_analytics import cluster_suppliers_spark
                 result = cluster_suppliers_spark()
             else:
@@ -284,27 +284,27 @@ def get_supplier_clusters():
             
         return jsonify(result)
     except Exception as e:
-        print(f"❌ Lỗi trong get_supplier_clusters: {str(e)}")
+        print(f"❌ Error in get_supplier_clusters: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @reorder_bp.route("/analysis/bottlenecks", methods=["GET"])
 def get_shipping_bottlenecks():
     try:
         from services.mongodb import db
-        # Truy vấn dữ liệu từ MongoDB
-        result = list(db["shipping_bottlenecks"].find({}, {"_id": 0}))  # ✅ Ẩn _id
+        # Query data from MongoDB
+        result = list(db["shipping_bottlenecks"].find({}, {"_id": 0}))  # ✅ Hide _id
         
-        # Nếu không có dữ liệu trong MongoDB, thực hiện phân tích và lưu kết quả
+        # If no data in MongoDB, perform analysis and save results
         if not result:
-            print("⚠️ Không có dữ liệu shipping_bottlenecks trong DB, sẽ chạy phân tích mới...")
+            print("⚠️ No shipping_bottlenecks data in DB, will run new analysis...")
             
-            # Kiểm tra xem có nên dùng Spark không
+            # Check if Spark should be used
             use_spark = request.args.get("use_spark", "false").lower() == "true"
             if not use_spark:
                 use_spark = is_large_dataset()
                 
             if use_spark:
-                print("🚀 Sử dụng Spark để phân tích bottlenecks")
+                print("🚀 Using Spark for bottleneck analysis")
                 from services.spark_analytics import analyze_bottlenecks_spark
                 result = analyze_bottlenecks_spark()
             else:
@@ -312,5 +312,5 @@ def get_shipping_bottlenecks():
             
         return jsonify(result)
     except Exception as e:
-        print(f"❌ Lỗi trong get_shipping_bottlenecks: {str(e)}")
+        print(f"❌ Error in get_shipping_bottlenecks: {str(e)}")
         return jsonify({"error": str(e)}), 500

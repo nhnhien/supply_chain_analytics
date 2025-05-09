@@ -109,17 +109,17 @@ def forecast_demand(periods=6):
             "xgboost": forecast_xgb,
             "arima": forecast_series_arima.tolist(),
         })
-        chart_data = [{"month": date.strftime("%Y-%m"), "orders": int(val), "type": "Thực tế"} for date, val in monthly_orders.items()]
+        chart_data = [{"month": date.strftime("%Y-%m"), "orders": int(val), "type": "Actual"} for date, val in monthly_orders.items()]
         chart_data += [{"month": date.strftime("%Y-%m"), "orders": int(val), "type": "XGBoost"} for date, val in forecast_series_xgb.items()]
         chart_data += [{"month": date.strftime("%Y-%m"), "orders": int(val), "type": "ARIMA"} for date, val in forecast_series_arima.items()]
 
         fig, ax = plt.subplots(figsize=(10, 4))
-        monthly_orders.plot(ax=ax, label="Thực tế", marker="o")
+        monthly_orders.plot(ax=ax, label="Actual", marker="o")
         forecast_series_xgb.plot(ax=ax, label="XGBoost", linestyle="--", marker="x")
         forecast_series_arima.plot(ax=ax, label="ARIMA", linestyle="--", marker="s")
-        ax.set_title("So sánh dự báo đơn hàng: XGBoost vs ARIMA")
-        ax.set_ylabel("Số đơn")
-        ax.set_xlabel("Tháng")
+        ax.set_title("Order Forecast Comparison: XGBoost vs ARIMA")
+        ax.set_ylabel("Number of Orders")
+        ax.set_xlabel("Month")
         ax.legend()
         ax.grid(True)
         charts_dir = os.path.join(os.path.dirname(__file__), "../charts/forecast")
@@ -127,7 +127,7 @@ def forecast_demand(periods=6):
         fig.savefig(os.path.join(charts_dir, "forecast_chart.png"), bbox_inches="tight")
 
         save_forecast_result({
-            "category": "Tổng thể",
+            "category": "Overall",
             "model": "XGBoost + ARIMA",
             "forecast_table": forecast_df.to_dict(orient="records"),
             "mae_rmse_comparison": {
@@ -138,7 +138,7 @@ def forecast_demand(periods=6):
 
         return {
             "status": "success",
-            "category": "Tổng thể",
+            "category": "Overall",
             "forecast_table": forecast_df.to_dict(orient="records"),
             "chart_data": chart_data,
             "chart": fig_to_base64(fig),
@@ -153,7 +153,7 @@ def forecast_demand(periods=6):
         print(traceback.format_exc())
         return {
             "status": "error",
-            "message": f"Lỗi nội bộ khi dự báo: {str(e)}",
+            "message": f"Internal error during forecasting: {str(e)}",
             "forecast_table": [],
             "chart_data": [],
             "chart": ""
@@ -247,7 +247,7 @@ def forecast_demand_by_category(category_name, periods=6):
             "arima": forecast_series_arima.tolist()
         })
 
-        chart_data = [{"month": date.strftime("%Y-%m"), "orders": int(val), "type": "Thực tế", "category": category_name}
+        chart_data = [{"month": date.strftime("%Y-%m"), "orders": int(val), "type": "Actual", "category": category_name}
                       for date, val in monthly_orders.items()]
         chart_data += [{"month": date.strftime("%Y-%m"), "orders": int(val), "type": "XGBoost", "category": category_name}
                        for date, val in forecast_series_xgb.items()]
@@ -290,7 +290,7 @@ def forecast_demand_by_category(category_name, periods=6):
         print(traceback.format_exc())
         return {
             "status": "error",
-            "message": f"Không thể tạo dự báo cho danh mục {category_name}: {str(e)}",
+            "message": f"Cannot create forecast for category {category_name}: {str(e)}",
             "forecast_table": [],
             "chart_data": [],
             "mae_rmse_comparison": {}

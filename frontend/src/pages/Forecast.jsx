@@ -69,7 +69,7 @@ const Forecast = () => {
 
   const currentCategoryData = forecastData.find((cat) => cat.category === selectedCategory);
 
-  const historicalData = currentCategoryData?.chart_data.filter((item) => item.type === "Thực tế") || [];
+  const historicalData = currentCategoryData?.chart_data.filter((item) => item.type === "Actual") || [];
   const forecastedXGB = currentCategoryData?.chart_data.filter((item) => item.type === "XGBoost") || [];
   const forecastedARIMA = currentCategoryData?.chart_data.filter((item) => item.type === "ARIMA") || [];
 

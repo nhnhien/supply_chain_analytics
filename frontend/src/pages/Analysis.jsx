@@ -97,10 +97,10 @@ const Analysis = () => {
         setLoading(false)
       } catch (err) {
         console.error("Error fetching analysis data:", err)
-        setError("Không thể tải dữ liệu phân tích. Vui lòng thử lại sau.")
+        setError("Unable to load analysis data. Please try again later.")
         setLoading(false)
 
-        // Nếu lỗi và chưa retry quá nhiều lần, thử lại sau 5 giây
+        // If error and haven't retried too many times, retry after 5 seconds
         if (retryCount < 3) {
           setTimeout(() => {
             setRetryCount((prev) => prev + 1)

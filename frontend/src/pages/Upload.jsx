@@ -235,7 +235,7 @@ const UploadPage = () => {
                   <FileText size={16} />
                   <span className="file-name">{file.name}</span>
                   <span className="file-size">({(file.size / 1024).toFixed(2)} KB)</span>
-                  <span className="file-date">Đã tải lên: {formatDate(file.uploadedAt)}</span>
+                  <span className="file-date">Uploaded: {formatDate(file.uploadedAt)}</span>
                 </div>
               ))}
             </div>

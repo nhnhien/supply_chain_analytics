@@ -66,10 +66,10 @@ const Reorder = () => {
   useEffect(() => {
     const fetchReorderData = async () => {
       try {
-        // Kiểm tra xem đã có file được upload chưa
+        // Check if files have been uploaded
         const uploadedFiles = getUploadedFiles();
         if (uploadedFiles.length === 0) {
-          // Nếu chưa có file nào được upload, chuyển hướng đến trang upload
+          // If no files have been uploaded, redirect to upload page
           navigate("/upload");
           return;
         }
@@ -77,12 +77,12 @@ const Reorder = () => {
         setLoading(true);
         setError(null);
 
-        // Tải dữ liệu theo từng phần để tránh timeout
+        // Load data in parts to avoid timeout
         try {
           const strategyRes = await getReorderStrategy();
           setReorderStrategy(strategyRes.data);
 
-          // Kiểm tra và lấy optimization_recommendations nếu có
+          // Check and get optimization_recommendations if available
           const recommendationsData = [];
 
           if (strategyRes.data && strategyRes.data.length > 0) {

@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'), // Đảm bảo alias @ hoạt động đúng với ESM
+      '@': resolve(__dirname, './src'), // Ensure @ alias works correctly with ESM
     },
   },
   server: {

@@ -15,19 +15,19 @@ const Sidebar = () => {
         <li>
           <NavLink to="/forecast" className={({ isActive }) => (isActive ? "active" : "")}>
             <TrendingUp size={20} />
-            <span>Dự báo</span>
+            <span>Forecast</span>
           </NavLink>
         </li>
         <li>
           <NavLink to="/reorder" className={({ isActive }) => (isActive ? "active" : "")}>
             <Package size={20} />
-            <span>Tồn kho</span>
+            <span>Reorder (Inventory Optimization)</span>
           </NavLink>
         </li>
         <li>
           <NavLink to="/analysis" className={({ isActive }) => (isActive ? "active" : "")}>
             <Activity size={20} />
-            <span>Phân tích</span>
+            <span>Analysis</span>
           </NavLink>
         </li>
         <li>

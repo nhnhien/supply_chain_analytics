@@ -68,7 +68,7 @@ def generate_monthly_orders_chart():
     return result
 
 
-# ✅ Chart 2: Top danh mục
+# ✅ Chart 2: Top categories
 def generate_top_categories_chart():
     cache_key = "chart_top_categories"
     cached = get_cache(cache_key)
@@ -81,9 +81,9 @@ def generate_top_categories_chart():
 
     fig, ax = plt.subplots(figsize=(8, 4))
     top_categories.plot(kind="bar", ax=ax, color="skyblue")
-    ax.set_title("Top 15 danh mục sản phẩm theo số lượng đơn hàng")
-    ax.set_ylabel("Số lượng sản phẩm")
-    ax.set_xlabel("Danh mục")
+    ax.set_title("Top 15 Product Categories by Order Volume")
+    ax.set_ylabel("Number of Products")
+    ax.set_xlabel("Category")
     ax.tick_params(axis='x', rotation=45)
 
     result = {
@@ -95,7 +95,7 @@ def generate_top_categories_chart():
     return result
 
 
-# ✅ Chart 3: Tỷ lệ giao trễ
+# ✅ Chart 3: Delivery delay ratio
 def generate_delivery_delay_pie():
     cache_key = "chart_delivery_delay"
     cached = get_cache(cache_key)
@@ -103,13 +103,13 @@ def generate_delivery_delay_pie():
         return cached
 
     df = preprocess_data()
-    delay_counts = df["delivery_delay"].dropna().apply(lambda x: "Trễ" if x > 0 else "Đúng hạn").value_counts()
+    delay_counts = df["delivery_delay"].dropna().apply(lambda x: "Delayed" if x > 0 else "On Time").value_counts()
     chart_data = [{"status": k, "count": int(v)} for k, v in delay_counts.items()]
 
     fig, ax = plt.subplots()
     delay_counts.plot(kind="pie", autopct='%1.1f%%', ax=ax, startangle=90, colors=["salmon", "lightgreen"])
     ax.set_ylabel("")
-    ax.set_title("Tỷ lệ đơn hàng giao trễ")
+    ax.set_title("Order Delivery Delay Ratio")
 
     result = {
         "chart": fig_to_base64(fig),
@@ -146,7 +146,7 @@ def generate_shipping_duration_by_seller_chart():
     return result
 
 
-# ✅ Chart 5: Chi phí vận chuyển theo danh mục
+# ✅ Chart 5: Shipping cost by category
 def generate_shipping_cost_by_category_chart():
     cache_key = "chart_shipping_cost_category"
     cached = get_cache(cache_key)
@@ -159,8 +159,8 @@ def generate_shipping_cost_by_category_chart():
 
     fig, ax = plt.subplots(figsize=(8, 4))
     shipping_cost.plot(kind="bar", ax=ax, color="violet")
-    ax.set_ylabel("Chi phí vận chuyển (VND)")
-    ax.set_title("Top 15 danh mục có chi phí vận chuyển cao nhất")
+    ax.set_ylabel("Shipping Cost (VND)")
+    ax.set_title("Top 15 Categories by Shipping Cost")
     ax.tick_params(axis='x', rotation=45)
 
     result = {

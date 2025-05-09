@@ -11,8 +11,8 @@ def load_csv(filename):
 
 def preprocess_data(use_spark=False):
     """
-    Xử lý dữ liệu đầu vào, với lựa chọn sử dụng Spark cho dữ liệu lớn
-    hoặc Pandas cho dữ liệu nhỏ
+    Process input data, with the option to use Spark for large datasets
+    or Pandas for small datasets
     """
     if use_spark:
         return preprocess_data_spark()
@@ -20,18 +20,18 @@ def preprocess_data(use_spark=False):
         return preprocess_data_pandas()
 
 def preprocess_data_pandas():
-    # Code hiện tại của bạn
+    # Current code
     customers = load_csv("df_Customers.csv")
     orders = load_csv("df_Orders.csv")
     order_items = load_csv("df_OrderItems.csv")
     products = load_csv("df_Products.csv")
     
-    # Xử lý dữ liệu như hiện tại...
+    # Process data as before...
     orders["order_purchase_timestamp"] = pd.to_datetime(orders["order_purchase_timestamp"])
     orders["order_delivered_timestamp"] = pd.to_datetime(orders["order_delivered_timestamp"])
     orders["order_estimated_delivery_date"] = pd.to_datetime(orders["order_estimated_delivery_date"])
     
-    # Chuyển đổi tiền tệ...
+    # Currency conversion...
     if "price" in order_items.columns:
         order_items["price"] = order_items["price"].apply(brl_to_vnd)
     
@@ -53,18 +53,18 @@ def preprocess_data_pandas():
 
 def preprocess_data_spark():
     """
-    Xử lý dữ liệu sử dụng Apache Spark cho dataset lớn
+    Process data using Apache Spark for large datasets
     """
     from pyspark.sql import SparkSession
     from pyspark.sql.functions import col, datediff, to_date, lit, when
 
-    # Khởi tạo Spark session
+    # Initialize Spark session
     spark = SparkSession.builder \
         .appName("SupplyChainPreprocessing") \
         .config("spark.executor.memory", "2g") \
         .getOrCreate()
     
-    # Load dữ liệu
+    # Load data
     customers = spark.read.csv(os.path.join(UPLOAD_FOLDER, "df_Customers.csv"), 
                              header=True, inferSchema=True)
     orders = spark.read.csv(os.path.join(UPLOAD_FOLDER, "df_Orders.csv"), 
@@ -74,7 +74,7 @@ def preprocess_data_spark():
     products = spark.read.csv(os.path.join(UPLOAD_FOLDER, "df_Products.csv"), 
                             header=True, inferSchema=True)
     
-    # Chuyển đổi kiểu dữ liệu timestamp
+    # Convert timestamp data types
     orders = orders.withColumn("order_purchase_timestamp", 
                              to_date(col("order_purchase_timestamp")))
     orders = orders.withColumn("order_delivered_timestamp", 
@@ -82,13 +82,13 @@ def preprocess_data_spark():
     orders = orders.withColumn("order_estimated_delivery_date", 
                              to_date(col("order_estimated_delivery_date")))
     
-    # Chuyển đổi tiền tệ (ví dụ, price -> VND)
+    # Currency conversion (e.g., price -> VND)
     BRL_TO_VND_RATE = 5200
     if "price" in order_items.columns:
         order_items = order_items.withColumn("price", 
                                           col("price") * lit(BRL_TO_VND_RATE))
     
-    # Join dữ liệu
+    # Join data
     df = order_items.join(orders, "order_id", "inner") \
                   .join(products, "product_id", "left") \
                   .join(customers, "customer_id", "left")
@@ -107,17 +107,17 @@ def preprocess_data_spark():
     if "freight_value" in df.columns and "shipping_charges" not in df.columns:
         df = df.withColumnRenamed("freight_value", "shipping_charges")
     
-    # Chuyển đổi sang pandas để tương thích với code hiện tại
+    # Convert to pandas for compatibility with current code
     df_pandas = df.toPandas()
     
-    # Đóng spark session
+    # Close Spark session
     spark.stop()
     
     return df_pandas
 
 def is_large_dataset():
     """
-    Kiểm tra xem dataset có lớn không để quyết định dùng Spark hay Pandas
+    Check if dataset is large to decide whether to use Spark or Pandas
     """
     total_size = 0
     for filename in ["df_Customers.csv", "df_Orders.csv", "df_OrderItems.csv", "df_Products.csv"]:
@@ -125,5 +125,5 @@ def is_large_dataset():
         if os.path.exists(path):
             total_size += os.path.getsize(path)
     
-    # Nếu tổng kích thước > 500MB thì dùng Spark
+    # If total size > 500MB, use Spark
     return total_size > 500 * 1024 * 1024

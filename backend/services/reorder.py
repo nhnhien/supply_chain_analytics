@@ -19,41 +19,41 @@ def calculate_reorder_strategy():
     if cached:
         return cached
 
-    # Kiểm tra xem có dùng Spark hay không
+    # Check if Spark should be used
     use_spark = is_large_dataset()
     if use_spark:
-        print("📊 Sử dụng Spark để tính toán chiến lược reorder (dữ liệu lớn)")
+        print("📊 Using Spark to calculate reorder strategy (large dataset)")
         from services.spark_analytics import calculate_reorder_strategy_spark
         return calculate_reorder_strategy_spark()
     
-    # Nếu không dùng Spark, tiếp tục với code hiện tại
+    # If not using Spark, continue with current code
     df = preprocess_data()
     categories = df["product_category_name"].dropna().unique()
 
     forecast_cache_key = "forecast_all_categories_15"
     cached_forecasts = get_cache(forecast_cache_key)
 
-    # 🔁 Nếu chưa có cache, tự gọi forecast_demand_all
+    # 🔁 If no cache, call forecast_demand_all
     if not cached_forecasts:
-        print("⚠️ Forecast cache chưa có, tự động gọi forecast_demand_all...")
+        print("⚠️ Forecast cache not available, automatically calling forecast_demand_all...")
         from routes.forecast import get_forecast_for_all_categories
         response = get_forecast_for_all_categories()
         cached_forecasts = response.get_json()
 
     if not cached_forecasts:
-        print("❌ Forecast cache vẫn chưa sẵn sàng sau khi gọi. Dừng lại.")
+        print("❌ Forecast cache still not ready after call. Stopping.")
         return []
 
     forecast_map = {f["category"]: f for f in cached_forecasts if f["status"] == "success"}
 
     z_score = 1.65
-    # Chuyển đổi giá trị từ BRL sang VND
-    holding_cost_per_unit_per_month = brl_to_vnd(2)  # Giả sử chi phí 2 BRL/đơn vị/tháng
+    # Convert values from BRL to VND
+    holding_cost_per_unit_per_month = brl_to_vnd(2)  # Assume cost of 2 BRL/unit/month
     strategy = []
 
     for category in categories:
         if category not in forecast_map:
-            print(f"⚠️ Bỏ qua {category} vì không có trong forecast cache.")
+            print(f"⚠️ Skipping {category} as it's not in forecast cache.")
             continue
 
         try:
@@ -85,7 +85,7 @@ def calculate_reorder_strategy():
             print(f"✅ {category} | Holding cost = {format_vnd(holding_cost)}")
 
         except Exception as e:
-            print(f"⚠️ Lỗi khi xử lý {category}: {str(e)}")
+            print(f"⚠️ Error processing {category}: {str(e)}")
             continue
 
     set_cache(cache_key, strategy, ttl_seconds=3600)
@@ -99,7 +99,7 @@ def generate_optimization_recommendations(strategy_data, return_df=False):
     strategy_df = pd.DataFrame(strategy_data)
 
     if "holding_cost" not in strategy_df.columns:
-        print("❌ Không có cột 'holding_cost'.")
+        print("❌ No 'holding_cost' column.")
         return pd.DataFrame() if return_df else None
 
     strategy_df["holding_cost"] = pd.to_numeric(strategy_df["holding_cost"], errors="coerce").fillna(0).astype(int)
@@ -123,8 +123,8 @@ def generate_optimization_recommendations(strategy_data, return_df=False):
             recommendations.append({
                 "category": category,
                 "recommendation": (
-                    f"Giảm Safety Stock từ {safety_stock} → {new_safety_stock} "
-                    f"và Reorder Point từ {reorder_point} → {new_reorder_point} để tiết kiệm chi phí."
+                    f"Reduce Safety Stock from {safety_stock} → {new_safety_stock} "
+                    f"and Reorder Point from {reorder_point} → {new_reorder_point} to save costs."
                 ),
                 "new_safety_stock": new_safety_stock,
                 "new_reorder_point": new_reorder_point,
@@ -134,86 +134,86 @@ def generate_optimization_recommendations(strategy_data, return_df=False):
             })
 
     if not recommendations:
-        print("⚠️ Không có khuyến nghị nào đủ điều kiện.")
+        print("⚠️ No recommendations meet the criteria.")
         return pd.DataFrame() if return_df else None
 
     save_reorder_recommendations(recommendations)
 
     df = pd.DataFrame(recommendations)
 
-    # ✅ Ghi file Excel để hỗ trợ route download
+    # ✅ Write Excel file to support download route
     output_dir = os.path.join("charts", "reorder")
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "optimization_recommendations.xlsx")
     df.to_excel(output_path, index=False)
 
-    print(f"✅ File khuyến nghị đã được tạo tại: {output_path}")
+    print(f"✅ Recommendations file created at: {output_path}")
 
     return df if return_df else output_path
 
 
 def cluster_suppliers(n_clusters=3):
     """
-    Phân cụm nhà cung cấp dựa trên số lượng đơn hàng, thời gian giao hàng,
-    và chi phí vận chuyển trung bình.
+    Cluster suppliers based on order volume, delivery time,
+    and average shipping cost.
     """
     try:
-        print("🚀 Bắt đầu phân cụm nhà cung cấp...")
+        print("🚀 Starting supplier clustering...")
         cache_key = "supplier_clusters"
         cached = get_cache(cache_key)
         if cached:
             return cached
 
-        # Kiểm tra xem có nên dùng Spark hay không
+        # Check if Spark should be used
         use_spark = is_large_dataset()
         if use_spark:
-            print("📊 Sử dụng Spark để phân cụm nhà cung cấp (dữ liệu lớn)")
+            print("📊 Using Spark for supplier clustering (large dataset)")
             from services.spark_analytics import cluster_suppliers_spark
             clusters = cluster_suppliers_spark(n_clusters)
             
-            # Cache và lưu kết quả
+            # Cache and save results
             set_cache(cache_key, clusters, ttl_seconds=3600*24)
             save_supplier_clusters(clusters)
             
             return clusters
 
-        # Nếu không dùng Spark, tiếp tục với code hiện tại
+        # If not using Spark, continue with current code
         df = preprocess_data()
 
         supplier_df = df.groupby("seller_id").agg({
             "order_id": "nunique",
             "shipping_duration": "mean",
-            "shipping_charges": "mean"  # ✅ dùng đúng tên cột
+            "shipping_charges": "mean"  # ✅ use correct column name
         }).reset_index()
 
         supplier_df.columns = ["seller_id", "total_orders", "avg_shipping_days", "avg_freight"]
         
-        # Đảm bảo dữ liệu có đúng định dạng
+        # Ensure data has correct format
         supplier_df["avg_shipping_days"] = supplier_df["avg_shipping_days"].fillna(0).astype(float)
         supplier_df["avg_freight"] = supplier_df["avg_freight"].apply(lambda x: float(brl_to_vnd(x)) if pd.notnull(x) else 0)
         supplier_df["total_orders"] = supplier_df["total_orders"].fillna(0).astype(int)
         
-        # Lọc những nhà cung cấp có ít nhất 5 đơn hàng
+        # Filter suppliers with at least 5 orders
         filtered_suppliers = supplier_df[supplier_df["total_orders"] >= 5].copy()
         
         if len(filtered_suppliers) < n_clusters:
-            print(f"⚠️ Không đủ nhà cung cấp để phân thành {n_clusters} cụm. Chỉ có {len(filtered_suppliers)} seller đủ điều kiện.")
-            # Giảm số cụm nếu không đủ dữ liệu
+            print(f"⚠️ Not enough suppliers to form {n_clusters} clusters. Only {len(filtered_suppliers)} sellers meet criteria.")
+            # Reduce number of clusters if not enough data
             n_clusters = max(2, len(filtered_suppliers) // 2)
             
-        print(f"ℹ️ Phân cụm {len(filtered_suppliers)} nhà cung cấp thành {n_clusters} nhóm")
+        print(f"ℹ️ Clustering {len(filtered_suppliers)} suppliers into {n_clusters} groups")
 
-        # Chuẩn hóa dữ liệu để tránh bias
+        # Normalize data to avoid bias
         features = filtered_suppliers[["total_orders", "avg_shipping_days", "avg_freight"]].fillna(0)
         from sklearn.preprocessing import StandardScaler
         scaler = StandardScaler()
         features_scaled = scaler.fit_transform(features)
 
-        # Phân cụm
+        # Perform clustering
         kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
         filtered_suppliers["cluster"] = kmeans.fit_predict(features_scaled)
 
-        # Thêm mô tả cụm
+        # Add cluster descriptions
         cluster_stats = filtered_suppliers.groupby("cluster").agg({
             "avg_shipping_days": "mean",
             "avg_freight": "mean",
@@ -223,30 +223,30 @@ def cluster_suppliers(n_clusters=3):
         cluster_descriptions = {}
         for cluster_id, stats in cluster_stats.iterrows():
             if stats["avg_shipping_days"] < 15 and stats["avg_freight"] < 500000:
-                description = "Nhanh và rẻ"
+                description = "Fast and Cheap"
             elif stats["avg_shipping_days"] < 15 and stats["avg_freight"] >= 500000:
-                description = "Nhanh nhưng đắt"
+                description = "Fast but Expensive"
             elif stats["avg_shipping_days"] >= 15 and stats["avg_freight"] < 500000:
-                description = "Chậm nhưng rẻ"
+                description = "Slow but Cheap"
             else:
-                description = "Chậm và đắt"
+                description = "Slow and Expensive"
                 
             cluster_descriptions[cluster_id] = description
             
         filtered_suppliers["cluster_description"] = filtered_suppliers["cluster"].map(cluster_descriptions)
 
-        # Chuyển thành dạng dict để lưu và trả về
+        # Convert to dict for storage and return
         clusters = filtered_suppliers.to_dict(orient="records")
         
-        # Cache và lưu kết quả
+        # Cache and save results
         set_cache(cache_key, clusters, ttl_seconds=3600*24)
         save_supplier_clusters(clusters)
         
-        print(f"✅ Hoàn thành phân cụm: {len(clusters)} nhà cung cấp")
+        print(f"✅ Clustering completed: {len(clusters)} suppliers")
         return clusters
 
     except Exception as e:
-        print(f"❌ Lỗi trong quá trình phân cụm nhà cung cấp: {str(e)}")
+        print(f"❌ Error during supplier clustering: {str(e)}")
         import traceback
         traceback.print_exc()
         return []
@@ -254,42 +254,42 @@ def cluster_suppliers(n_clusters=3):
 
 def analyze_bottlenecks(threshold_days=20):
     """
-    Phân tích các bottleneck trong quy trình giao hàng, xác định các nhà cung cấp 
-    có tỷ lệ giao hàng trễ cao
+    Analyze shipping process bottlenecks, identify suppliers
+    with high delivery delay rates
     """
     try:
-        print("🚀 Bắt đầu phân tích bottleneck giao hàng...")
+        print("🚀 Starting shipping bottleneck analysis...")
         cache_key = "shipping_bottlenecks"
         cached = get_cache(cache_key)
         if cached:
             return cached
 
-        # Kiểm tra xem có nên dùng Spark hay không
+        # Check if Spark should be used
         use_spark = is_large_dataset()
         if use_spark:
-            print("📊 Sử dụng Spark để phân tích bottlenecks (dữ liệu lớn)")
+            print("📊 Using Spark for bottleneck analysis (large dataset)")
             from services.spark_analytics import analyze_bottlenecks_spark
             bottlenecks = analyze_bottlenecks_spark(threshold_days)
             
-            # Cache và lưu kết quả
+            # Cache and save results
             set_cache(cache_key, bottlenecks, ttl_seconds=3600*24)
             save_bottleneck_analysis(bottlenecks)
             
             return bottlenecks
 
-        # Nếu không dùng Spark, tiếp tục với code hiện tại
+        # If not using Spark, continue with current code
         df = preprocess_data()
 
-        # Xác định đơn hàng nào bị trễ dựa trên ngưỡng
+        # Identify delayed orders based on threshold
         df["is_late"] = df["shipping_duration"] > threshold_days
         
-        print("📦 Thống kê shipping_duration:")
+        print("📦 Shipping duration statistics:")
         print(df["shipping_duration"].describe())
         
         late_ratio_all = (df["is_late"].mean() * 100)
-        print(f"⚠️ Tỷ lệ đơn hàng bị trễ toàn bộ theo ngưỡng {threshold_days} ngày: {late_ratio_all:.2f}%")
+        print(f"⚠️ Overall order delay rate with {threshold_days} days threshold: {late_ratio_all:.2f}%")
 
-        # Phân tích theo từng nhà cung cấp
+        # Analyze by supplier
         bottlenecks = df.groupby("seller_id").agg({
             "order_id": "count",
             "is_late": "mean",
@@ -299,41 +299,41 @@ def analyze_bottlenecks(threshold_days=20):
 
         bottlenecks.columns = ["seller_id", "total_orders", "late_ratio", "top_category", "avg_delivery_time"]
 
-        # Chỉ lấy seller có ít nhất 5 đơn và tỷ lệ trễ cao hơn trung bình
+        # Only take sellers with at least 5 orders and delay rate higher than average
         bottlenecks = bottlenecks[(bottlenecks["total_orders"] >= 5) & 
                                   (bottlenecks["late_ratio"] > late_ratio_all/100)]
 
-        # Thêm thông tin phần trăm
+        # Add percentage information
         bottlenecks["late_percentage"] = (bottlenecks["late_ratio"] * 100).round(1)
         
-        # Thêm ghi chú mức độ nghiêm trọng
+        # Add severity notes
         def get_severity(row):
             if row["late_percentage"] > 75:
-                return "Rất nghiêm trọng"
+                return "Very Severe"
             elif row["late_percentage"] > 50:
-                return "Nghiêm trọng"
+                return "Severe"
             elif row["late_percentage"] > 25:
-                return "Trung bình"
+                return "Moderate"
             else:
-                return "Nhẹ"
+                return "Mild"
         
         bottlenecks["severity"] = bottlenecks.apply(get_severity, axis=1)
         
-        # Lấy 10 seller có vấn đề nhất
+        # Get top 10 problematic sellers
         top_bottlenecks = bottlenecks.sort_values("late_percentage", ascending=False).head(10)
         
-        # Chuẩn bị kết quả
+        # Prepare results
         top_bottlenecks_list = top_bottlenecks.to_dict(orient="records")
         
-        # Cache và lưu kết quả
+        # Cache and save results
         set_cache(cache_key, top_bottlenecks_list, ttl_seconds=3600*24)
         save_bottleneck_analysis(top_bottlenecks_list)
         
-        print(f"✅ Hoàn thành phân tích bottleneck: {len(top_bottlenecks_list)} seller có vấn đề")
+        print(f"✅ Bottleneck analysis completed: {len(top_bottlenecks_list)} problematic sellers")
         return top_bottlenecks_list
 
     except Exception as e:
-        print(f"❌ Lỗi trong quá trình phân tích bottleneck: {str(e)}")
+        print(f"❌ Error during bottleneck analysis: {str(e)}")
         import traceback
         traceback.print_exc()
         return []

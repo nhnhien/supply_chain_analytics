@@ -36,7 +36,7 @@ def get_forecast_by_category(category_name):
         print(f"❌ Route error for category {category_name}: {str(e)}")
         return jsonify({
             "status": "error",
-            "message": f"Lỗi khi xử lý dự báo cho danh mục {category_name}: {str(e)}",
+            "message": f"Error processing forecast for category {category_name}: {str(e)}",
             "forecast_table": [],
             "chart_data": []
         }), 500
@@ -75,7 +75,7 @@ def get_forecast_for_all_categories():
             print("🚀 Forecasting for Tổng thể với Spark...")
             t0 = time.time()
             overall = forecast_demand_spark()
-            overall["category"] = "Tổng thể"
+            overall["category"] = "Overall"
             all_forecasts.append(overall)
             print(f"✅ Done Tổng thể with Spark in {round(time.time() - t0, 2)}s")
             
@@ -95,7 +95,7 @@ def get_forecast_for_all_categories():
             print("🚀 Forecasting for Tổng thể...")
             t0 = time.time()
             overall = forecast_demand()
-            overall["category"] = "Tổng thể"
+            overall["category"] = "Overall"
             all_forecasts.append(overall)
             print(f"✅ Done Tổng thể in {round(time.time() - t0, 2)}s")
 
@@ -123,7 +123,7 @@ def get_forecast_for_all_categories():
         print(f"❌ Error in /forecast/demand/all: {str(e)}")
         return jsonify({
             "status": "error",
-            "message": f"Lỗi khi xử lý tất cả danh mục: {str(e)}",
+            "message": f"Error processing all categories: {str(e)}",
             "stacktrace": str(e)
         }), 500
 

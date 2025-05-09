@@ -59,7 +59,7 @@ const Dashboard = () => {
         setTopCategories(topCategoriesRes.data.data)
         
         // Process forecast data - find overall forecast
-        const overallForecast = forecastRes.data.find(item => item.category === "Tổng thể")
+        const overallForecast = forecastRes.data.find(item => item.category === "Overall")
         setForecast(overallForecast)
         
         setLoading(false)
@@ -114,8 +114,8 @@ const Dashboard = () => {
   const orderGrowth = prevMonthOrders ? (((lastMonthOrders - prevMonthOrders) / prevMonthOrders) * 100).toFixed(1) : 0
 
   // 2. On-time delivery rate
-  const onTimeDelivery = deliveryDelay.find((item) => item.status === "Đúng hạn")?.count || 0
-  const lateDelivery = deliveryDelay.find((item) => item.status === "Trễ")?.count || 0
+  const onTimeDelivery = deliveryDelay.find((item) => item.status === "On Time")?.count || 0
+  const lateDelivery = deliveryDelay.find((item) => item.status === "Delayed")?.count || 0
   const totalDeliveries = onTimeDelivery + lateDelivery
   const onTimeRate = totalDeliveries ? ((onTimeDelivery / totalDeliveries) * 100).toFixed(1) : 0
 
@@ -128,7 +128,7 @@ const Dashboard = () => {
   let forecastGrowth = 0
   
   if (forecast && forecast.chart_data) {
-    const actualData = forecast.chart_data.filter(item => item.type === "Thực tế")
+    const actualData = forecast.chart_data.filter(item => item.type === "Actual")
     const forecastData = forecast.chart_data.filter(item => item.type === "XGBoost")
     
     const lastActualValue = actualData.length > 0 ? parseInt(actualData[actualData.length - 1].orders) : 0

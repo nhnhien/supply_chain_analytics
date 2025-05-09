@@ -52,7 +52,7 @@ def plot_shipping_cost_by_category(df):
     fig, ax = plt.subplots(figsize=(8, 4))
     shipping_cost.plot(kind="bar", ax=ax, color="violet")
     ax.set_ylabel("VND")
-    ax.set_title("Chi phí vận chuyển trung bình theo danh mục")
+    ax.set_title("Average Shipping Cost by Category")
     ax.tick_params(axis='x', rotation=45)
     save_chart(fig, "shipping_cost_category.png")
 
